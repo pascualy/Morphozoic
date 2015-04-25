@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="morphozoic\cell.cpp" />
+    <ClCompile Include="morphozoic\morphozoic.cpp" />
+    <ClCompile Include="morphozoic\organism.cpp" />
+    <ClCompile Include="morphozoic\parameters.cpp" />
+    <ClCompile Include="util\baseObject.cpp" />
+    <ClCompile Include="util\camera.cpp" />
+    <ClCompile Include="util\fileio.cpp" />
+    <ClCompile Include="util\frameRate.cpp" />
+    <ClCompile Include="util\frustum.cpp" />
+    <ClCompile Include="util\gettime.cpp" />
+    <ClCompile Include="util\log.cpp" />
+    <ClCompile Include="util\md5.cpp" />
+    <ClCompile Include="util\octree.cpp" />
+    <ClCompile Include="util\quaternion.cpp" />
+    <ClCompile Include="util\random.cpp" />
+    <ClCompile Include="util\spacial.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="morphozoic\cell.hpp" />
+    <ClInclude Include="morphozoic\morphozoic.h" />
+    <ClInclude Include="morphozoic\organism.hpp" />
+    <ClInclude Include="morphozoic\parameters.hpp" />
+    <ClInclude Include="util\baseObject.hpp" />
+    <ClInclude Include="util\camera.hpp" />
+    <ClInclude Include="util\common.h" />
+    <ClInclude Include="util\fileio.h" />
+    <ClInclude Include="util\frameRate.hpp" />
+    <ClInclude Include="util\frustum.hpp" />
+    <ClInclude Include="util\gettime.h" />
+    <ClInclude Include="util\log.hpp" />
+    <ClInclude Include="util\matrix.hpp" />
+    <ClInclude Include="util\md5.h" />
+    <ClInclude Include="util\octree.hpp" />
+    <ClInclude Include="util\quaternion.hpp" />
+    <ClInclude Include="util\random.hpp" />
+    <ClInclude Include="util\spacial.hpp" />
+    <ClInclude Include="util\vector.hpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{58CEE92F-F667-483F-952D-1B92AB8B6DFC}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>11.0.60610.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>..\bin\</OutDir>
+    <IntDir>Debug\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>..\include\win32;$(IncludePath)</IncludePath>
+    <LibraryPath>..\lib\win32;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>..\bin\</OutDir>
+    <IntDir>Release\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>..\include\win32;$(IncludePath)</IncludePath>
+    <LibraryPath>..\lib\win32;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\include ..\..\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;MORPHOZOIC_MAIN;MD5_ID;THREADS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>..\lib\sxmlguid.lib;..\lib\win32\glut32.lib;..\lib\win32\pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>..\bin\morphozoic.exe</OutputFile>
+      <IgnoreSpecificDefaultLibraries>libcd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)morphozoic.pdb</ProgramDatabaseFile>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\include ..\..\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;MORPHOZOIC_MAIN;MD5_ID;THREADS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>..\lib\sxmlgui.lib;..\lib\win32\glut32.lib;..\lib\win32\pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>..\bin\morphozoic.exe</OutputFile>
+      <IgnoreSpecificDefaultLibraries>libc.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

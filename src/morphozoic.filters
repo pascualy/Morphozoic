@@ -1,0 +1,138 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="utility">
+      <UniqueIdentifier>{e18790d7-2fe1-4dcd-a935-f93c8e9d07a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="chemistry">
+      <UniqueIdentifier>{48f705d6-3971-4e30-bb45-63b9db282ce7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="affinity">
+      <UniqueIdentifier>{a8455a74-62f7-4676-84f5-44f723318249}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\utility\baseObject.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utility\camera.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utility\fileio.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utility\frameRate.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utility\frustum.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utility\gettime.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utility\log.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utility\md5.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utility\octree.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utility\quaternion.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utility\random.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utility\spacial.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\chemistry\atom.cpp">
+      <Filter>chemistry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\chemistry\body.cpp">
+      <Filter>chemistry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\chemistry\chemistry.cpp">
+      <Filter>chemistry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\chemistry\molecule.cpp">
+      <Filter>chemistry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\chemistry\parameters.cpp">
+      <Filter>chemistry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\chemistry\thermal.cpp">
+      <Filter>chemistry</Filter>
+    </ClCompile>
+    <ClCompile Include="affinity.cpp">
+      <Filter>affinity</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\utility\baseObject.hpp">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\camera.hpp">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\fileio.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\frameRate.hpp">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\frustum.hpp">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\gettime.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\log.hpp">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\matrix.hpp">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\md5.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\octree.hpp">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\quaternion.hpp">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\random.hpp">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\spacial.hpp">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\vector.hpp">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\chemistry\atom.hpp">
+      <Filter>chemistry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\chemistry\body.hpp">
+      <Filter>chemistry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\chemistry\chemistry.hpp">
+      <Filter>chemistry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\chemistry\molecule.hpp">
+      <Filter>chemistry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\chemistry\parameters.hpp">
+      <Filter>chemistry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\chemistry\thermal.hpp">
+      <Filter>chemistry</Filter>
+    </ClInclude>
+    <ClInclude Include="affinity.h">
+      <Filter>affinity</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

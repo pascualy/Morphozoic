@@ -1,0 +1,184 @@
+<Panel name       = "Edit"
+       layout     = "YAXIS">
+
+  <Panel name           = "Row One"
+         layout         = "XAXIS"
+         drawBounds     = "false"
+         drawBackground = "false">
+
+    <Panel name           = "Create"
+           layout         = "YAXIS"
+           drawBounds     = "true"
+           drawBackground = "true">
+
+     <BordersColor x = "216" y = "169" z =  "0" />
+     <BGColor    x =  "0" y =  "0" z = "0" />
+
+      <Button callbackString = "createCell">
+        <EdgeOffsets x = "0.0" y = "0.0" />
+        <Text    string  = "Create Cell" />
+      </Button>
+
+    </Panel>
+
+  </Panel>
+
+  <Panel name           = "Row Two"
+         layout         = "XAXIS"
+         drawBounds     = "false"
+         drawBackground = "false">
+
+    <Panel name           = "Delete"
+           layout         = "YAXIS"
+           drawBounds     = "true"
+           drawBackground = "true">
+
+     <BordersColor x = "216" y = "169" z =  "0" />
+     <BGColor    x =  "0" y =  "0" z = "0" />
+
+      <Button callbackString = "deleteCurrent">
+        <EdgeOffsets x = "0.0" y = "0.0" />
+        <Text    string  = "Delete Current" />
+      </Button>
+
+     <Separator ratio = "1.0"  />
+
+     <ComboBox callbackString = "deleteOp">
+
+       <ScrollingColor r = "215" y = "170" z =  "0" />
+       <BordersColor   x = "215" y = "169" z =  "0" />
+       <BGColor        x =  "0" y =  "0" z = "0" />
+
+       <Item string = "cell" />
+       <Item string = "organism" />
+     </ComboBox>
+
+    </Panel>
+
+  </Panel>
+
+  <Panel name           = "Row Three"
+         layout         = "XAXIS"
+         drawBounds     = "false"
+         drawBackground = "false">
+
+    <Panel name           = "Move"
+           layout         = "YAXIS"
+           drawBounds     = "true"
+           drawBackground = "true">
+
+     <BordersColor x = "216" y = "169" z =  "0" />
+     <BGColor    x =  "0" y =  "0" z = "0" />
+
+     <Label name = "Title">
+      <Text string = "Move" fontIndex ="1" >
+         <Color r = "255" g = "180" b = "40" />
+      </Text>
+     </Label>
+
+     <Separator ratio = "1.0"  />
+
+     <ComboBox callbackString = "moveOp">
+
+       <ScrollingColor r = "215" y = "170" z =  "0" />
+       <BordersColor   x = "215" y = "169" z =  "0" />
+       <BGColor        x =  "0" y =  "0" z = "0" />
+
+       <Item string = "camera" />
+       <Item string = "cell" />
+     </ComboBox>
+
+    </Panel>
+
+  </Panel>
+
+  <Panel name           = "Row Four"
+         layout         = "XAXIS"
+         drawBounds     = "false"
+         drawBackground = "false">
+
+    <Panel name           = "Set Velocity"
+           layout         = "YAXIS"
+           drawBounds     = "true"
+           drawBackground = "true">
+
+     <BordersColor x = "216" y = "169" z =  "0" />
+     <BGColor    x =  "0" y =  "0" z = "0" />
+
+     <Label name = "Title">
+      <Text string = "Set Velocity" fontIndex ="1" >
+         <Color r = "255" g = "180" b = "40" />
+      </Text>
+     </Label>
+
+     <Separator ratio = "1.0"  />
+
+     <Panel name           = "XSlider"
+               layout         = "XAXIS"
+               anchorPoint    = "CORNERLU">
+
+         <Label name = "Title">
+          <Text string = "X:" fontIndex ="1" >
+             <Color r = "255" g = "180" b = "40" />
+          </Text>
+         </Label>
+
+         <BordersColor r = "216" g = "169" b =  "0" />
+         <BGColor    r =  "0" g =  "0" b = "0" />
+         <Position     x = "+10" y = "+10"/>
+
+         <Slider callbackString = "xspeed"
+                 progress       =  "1.0">
+          <Text    string  = "0.0" />
+         </Slider>
+
+     </Panel>
+
+     <Panel name           = "YSlider"
+               layout         = "XAXIS"
+               anchorPoint    = "CORNERLU">
+
+         <Label name = "Title">
+          <Text string = "Y:" fontIndex ="1" >
+             <Color r = "255" g = "180" b = "40" />
+          </Text>
+         </Label>
+
+         <BordersColor r = "216" g = "169" b =  "0" />
+         <BGColor    r =  "0" g =  "0" b = "0" />
+         <Position     x = "+10" y = "+10"/>
+
+         <Slider callbackString = "yspeed"
+                 progress       =  "1.0">
+          <Text    string  = "0.0" />
+         </Slider>
+
+     </Panel>
+
+     <Panel name           = "ZSlider"
+               layout         = "XAXIS"
+               anchorPoint    = "CORNERLU">
+
+         <Label name = "Title">
+          <Text string = "Z:" fontIndex ="1" >
+             <Color r = "255" g = "180" b = "40" />
+          </Text>
+         </Label>
+
+         <BordersColor r = "216" g = "169" b =  "0" />
+         <BGColor    r =  "0" g =  "0" b = "0" />
+         <Position     x = "+10" y = "+10"/>
+
+         <Slider callbackString = "zspeed"
+                 progress       =  "1.0">
+          <Text    string  = "0.0" />
+         </Slider>
+
+     </Panel>
+
+  </Panel>
+
+  </Panel>
+
+</Panel>
+
