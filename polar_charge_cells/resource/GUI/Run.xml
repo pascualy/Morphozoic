@@ -1,0 +1,89 @@
+<Panel name       = "Run"
+       layout     = "YAXIS">
+
+  <Panel name           = "Run Controls"
+         layout         = "YAXIS"
+         drawBounds     = "true"
+         drawBackground = "true">
+
+    <BordersColor r = "216" g = "169" b =  "0" />
+    <BGColor    r =  "0" g =  "0" b = "0" />
+  
+    <Label name = "Title">
+      <Text string = "Controls" />
+    </Label>
+
+    <Separator ratio = "1.0"  />
+    
+    <Panel name           = "SpeedSlider"
+           layout         = "YAXIS">
+
+         <BordersColor r = "216" g = "169" b =  "0" />
+         <BGColor    r =  "0" g =  "0" b = "0" />
+         <Position     x = "+10" y = "+10"/>
+
+         <Separator ratio = "1.0"  />
+    
+         <Slider callbackString = "delay"
+                 progress       =  "1.0">
+          <Text    string  = "Delay: STOP" />
+         </Slider>
+    
+    </Panel>
+
+    <Panel name           = "Buttons"
+           layout         = "XAXIS">
+
+       <BordersColor r = "216" g = "169" b =  "0" />
+       <BGColor      r =  "0" g =  "0" b = "0" />
+       
+      <Button callbackString = "step">
+        <EdgeOffsets x = "0.0" y = "0.0" />
+        <Text    string  = "Step" />
+      </Button>
+
+      <Button callbackString = "help">
+        <EdgeOffsets x = "0.0" y = "0.0" />
+        <Text    string  = "Help" />
+      </Button>
+
+    </Panel>
+
+  </Panel>
+
+  <Separator ratio = "1.0"  />
+  
+  <Panel name           = "Status"
+         layout         = "YAXIS"
+         drawBounds     = "true"
+         drawBackground = "true">
+ 
+    <BordersColor r = "216" g = "169" b =  "0" />
+    <BGColor      r =  "0" g =  "0" b = "0" />
+  
+    <Label name = "Title">
+      <Text string = "Status" />
+    </Label>
+
+    <Separator ratio = "1.0" />
+
+    <Label name = "statusText">
+      <Dimensions x = "100" y = "100" />
+      <Text string = "" />
+    </Label>
+
+  </Panel>
+
+  <Panel name           = "Cycles"
+         layout         = "YAXIS"
+         drawBounds     = "true"
+         drawBackground = "true">
+
+    <BGColor      r =  "0" g =  "0" b = "0" />
+    <BordersColor r = "216" g = "169" b =  "0" />
+
+    <Label name = "cycleCounter"><Text string = "Cycle:" /></Label>
+    
+  </Panel>
+
+</Panel>

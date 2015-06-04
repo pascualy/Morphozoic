@@ -1,0 +1,76 @@
+<Panel name       = "File"
+       layout     = "YAXIS">
+
+  <Panel name           = "File Name"
+         layout         = "YAXIS"
+         drawBounds     = "true"
+         drawBackground = "true">
+ 
+    <BordersColor x = "216" y = "169" z =  "0" />
+    <BGColor      x =  "0" y =  "0" z = "0" />
+  
+    <Label name = "Title">
+      <Text string = "File Name" fontIndex ="1">
+       <Color r = "255" g = "180" b = "40" />
+      </Text>
+    </Label>   
+
+    <Separator ratio = "1.0"  />
+
+      <TextBox callbackString = "fileName">
+        <Dimensions x = "200" />
+        <Color      r = "100" g =  "100" b = "100" />
+        <Text   string  = "" />
+      </TextBox>
+
+  </Panel>
+
+  <Panel name           = "File Controls"
+         layout         = "XAXIS"
+         drawBounds     = "false"
+         drawBackground = "false">
+
+    <Panel name           = "Operation"
+           layout         = "YAXIS"
+           drawBounds     = "true"
+           drawBackground = "true">
+
+     <BordersColor x = "216" y = "169" z =  "0" />
+     <BGColor    x =  "0" y =  "0" z = "0" />
+
+     <Label name = "Title">
+      <Text string = "Operation" fontIndex ="1" >
+         <Color r = "255" g = "180" b = "40" />
+      </Text>
+     </Label>
+
+     <Separator ratio = "1.0"  />
+
+     <ComboBox callbackString = "fileOp">
+
+       <ScrollingColor r = "215" y = "170" z =  "0" />
+       <BordersColor   x = "215" y = "169" z =  "0" />
+       <BGColor        x =  "0" y =  "0" z = "0" />
+
+       <Item string = "import" />
+       <Item string = "load" />
+       <Item string = "save" />
+     </ComboBox>
+
+    </Panel>
+
+    <Panel name        = "Execute">
+
+       <BordersColor r = "216" g = "169" b =  "0" />
+       <BGColor      r =  "0" g =  "0" b = "0" />
+
+      <Button callbackString = "fileExecute">
+        <EdgeOffsets x = "0.0" y = "0.0" />
+        <Text    string  = "Execute" />
+      </Button>
+  
+    </Panel>
+
+  </Panel>
+
+</Panel>

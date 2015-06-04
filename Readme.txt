@@ -1,1 +1,1 @@
-Morphozoic: a morphogenesis model.
+Morphozoic: morphogenesis models.
