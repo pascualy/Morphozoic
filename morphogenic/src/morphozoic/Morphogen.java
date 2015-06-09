@@ -2,6 +2,10 @@
 
 package morphozoic;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
 import java.util.Vector;
 
 /*
@@ -12,9 +16,6 @@ import java.util.Vector;
  */
 public class Morphogen
 {
-   // Cell.
-   Cell cell;
-
    // Sphere.
    public class Sphere
    {
@@ -71,20 +72,25 @@ public class Morphogen
    public static final int SPHERES = 3;
    public Vector<Sphere>   spheres;
 
-   // Constructor.
+   // Constructors.
    public Morphogen(Cell cell)
    {
-      this.cell = cell;
-      spheres   = new Vector<Sphere>();
+      spheres = new Vector<Sphere>();
       for (int i = 0; i < SPHERES; i++)
       {
-         spheres.add(generateSphere(i));
+         spheres.add(generateSphere(cell, i));
       }
    }
 
 
+   public Morphogen()
+   {
+      spheres = new Vector<Sphere>();
+   }
+
+
    // Generate field sphere.
-   private Sphere generateSphere(int sphereNum)
+   private Sphere generateSphere(Cell cell, int sphereNum)
    {
       Sphere sphere = new Sphere();
 
@@ -130,8 +136,80 @@ public class Morphogen
    }
 
 
+   // Get a sphere.
    public Sphere getSphere(int sphereNum)
    {
       return(spheres.get(sphereNum));
+   }
+
+
+   // Equality test.
+   public boolean equals(Morphogen morphogen)
+   {
+      for (int i = 0; i < SPHERES; i++)
+      {
+         Sphere s1 = getSphere(i);
+         Sphere s2 = morphogen.getSphere(i);
+         for (int j = 0; j < s1.sectors.length; j++)
+         {
+            Sphere.Sector t1 = s1.sectors[j];
+            Sphere.Sector t2 = s2.sectors[j];
+            for (int k = 0; k < t1.typeDensities.length; k++)
+            {
+               if (t1.typeDensities[k] != t2.typeDensities[k])
+               {
+                  return(false);
+               }
+            }
+         }
+      }
+      return(true);
+   }
+
+
+   // Save.
+   public void save(DataOutputStream writer) throws IOException
+   {
+      for (Sphere s : spheres)
+      {
+         for (int i = 0; i < s.sectors.length; i++)
+         {
+            Sphere.Sector t = s.sectors[i];
+            writer.writeInt(t.dx);
+            writer.writeInt(t.dy);
+            writer.writeInt(t.d);
+            for (int j = 0; j < t.typeDensities.length; j++)
+            {
+               writer.writeFloat(t.typeDensities[j]);
+            }
+         }
+      }
+      writer.flush();
+   }
+
+
+   // Load.
+   public static Morphogen load(DataInputStream reader) throws EOFException, IOException
+   {
+      Morphogen m = new Morphogen();
+
+      for (int i = 0; i < SPHERES; i++)
+      {
+         Sphere s = m.new Sphere();
+         m.spheres.add(s);
+         for (int j = 0; j < s.sectors.length; j++)
+         {
+            int           dx = reader.readInt();
+            int           dy = reader.readInt();
+            int           d  = reader.readInt();
+            Sphere.Sector t  = s.new Sector(dx, dy, d);
+            for (int k = 0; k < Cell.numTypes; k++)
+            {
+               t.setTypeDensity(k, reader.readFloat());
+            }
+            s.sectors[j] = t;
+         }
+      }
+      return(m);
    }
 }

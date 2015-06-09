@@ -3,7 +3,6 @@
 package morphozoic;
 
 import java.awt.Color;
-import java.util.Vector;
 
 // Cell.
 public class Cell
@@ -24,9 +23,6 @@ public class Cell
    // Morphogenic field.
    public Morphogen morphogen;
 
-   // Metabolic activities.
-   public Vector<Metabolic> metabolics;
-
    // Cell constructor.
    public Cell(int type, int x, int y,
                Orientation orientation, Organism organism)
@@ -37,7 +33,6 @@ public class Cell
       this.orientation = orientation;
       this.organism    = organism;
       morphogen        = null;
-      metabolics       = new Vector<Metabolic>();
    }
 
 
@@ -80,18 +75,5 @@ public class Cell
       {
          morphogen = null;
       }
-   }
-
-
-   // Add metabolic activity.
-   public void addMetabolic(Metabolic metabolic)
-   {
-      metabolics.add(metabolic);
-   }
-
-
-   // Do metabolic activities.
-   public void doMetabolics()
-   {
    }
 }

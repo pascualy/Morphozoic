@@ -30,6 +30,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.Constructor;
+import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -40,19 +41,19 @@ public class Morphozoic extends JFrame implements Runnable
    Organism organism;
 
    // Update rate (milliseconds).
-   static final int MIN_UPDATE_DELAY = 100;
-   static final int MAX_UPDATE_DELAY = 1000;
+   public static final int MIN_UPDATE_DELAY = 100;
+   public static final int MAX_UPDATE_DELAY = 1000;
 
    // Display rate (milliseconds).
-   static final int DISPLAY_UPDATE_DELAY = 50;
+   public static final int DISPLAY_UPDATE_DELAY = 50;
 
    // Display.
-   static final Dimension displaySize = new Dimension(500, 500);
-   Canvas                 canvas;
-   Graphics               canvasGraphics;
-   Dimension              canvasSize;
-   double                 cellWidth;
-   double                 cellHeight;
+   public static final Dimension displaySize = new Dimension(500, 500);
+   Canvas    canvas;
+   Graphics  canvasGraphics;
+   Dimension canvasSize;
+   double    cellWidth;
+   double    cellHeight;
    Image     image;
    Graphics  imageGraphics;
    Dimension imageSize;
@@ -81,18 +82,23 @@ public class Morphozoic extends JFrame implements Runnable
    int         fontWidth;
    int         fontHeight;
 
+   // Options.
+   public static final String OPTIONS = "\n\t[-numCellTypes <number of cell types>]\n\t[-randomSeed <random seed>]";
+
    // Constructor.
-   public Morphozoic(String organismName, Integer randomSeed) throws Exception
+   public Morphozoic(String organismName, String[] organismArgs,
+                     Integer randomSeed) throws Exception
    {
       // Create the organism.
       try
       {
          Class<?>       cl   = Class.forName(organismName);
-         Constructor<?> cons = cl.getConstructor(Integer.class );
-         organism = (Organism)cons.newInstance(randomSeed);
+         Constructor<?> cons = cl.getConstructor(String[].class, Integer.class );
+         organism = (Organism)cons.newInstance(organismArgs, randomSeed);
       }
       catch (Exception e) {
-         throw new Exception("Cannot create organism " + organismName);
+         throw new Exception("Cannot create organism " + organismName +
+                             ":" + e.getMessage());
       }
 
       // Create display.
@@ -375,10 +381,10 @@ public class Morphozoic extends JFrame implements Runnable
             {
                if (organism.cells[x][y].type != Cell.EMPTY)
                {
-                  displayField     = true;
                   displayFieldCell = organism.cells[x][y].clone();
                   displayFieldCell.generateMorphogen();
                   displayFieldSphere = 0;
+                  displayField       = true;
                }
             }
          }
@@ -420,12 +426,13 @@ public class Morphozoic extends JFrame implements Runnable
    // Main.
    public static void main(String[] args)
    {
-      String usage        = "Usage: java morphozoic.Morphozoic [-organism <morphozoic.applications.<Organism class name>] [-numCellTypes <number of cell types>] [-randomSeed <random seed>]";
+      String usage        = "Usage: java morphozoic.Morphozoic\n\t[-organism <morphozoic.applications.<Organism class name>]" + OPTIONS + "\n\t[organism-specific options]";
       String organismName = Organism.DEFAULT_ORGANISM;
       int    randomSeed   = Organism.DEFAULT_RANDOM_SEED;
 
       // Get arguments.
-      for (int i = 0; i < args.length; )
+      Vector<String> argsVector = new Vector<String>();
+      for (int i = 0; i < args.length; i++)
       {
          if (args[i].equals("-organism"))
          {
@@ -439,6 +446,7 @@ public class Morphozoic extends JFrame implements Runnable
             if (Cell.numTypes <= 0)
             {
                System.err.println("Number of cell types must be positive");
+               System.err.println(usage);
                return;
             }
          }
@@ -447,16 +455,25 @@ public class Morphozoic extends JFrame implements Runnable
             i++;
             randomSeed = Integer.parseInt(args[i]);
          }
+         else if (args[i].equals("-help"))
+         {
+            System.out.println(usage);
+            return;
+         }
          else
          {
-            System.err.println(usage);
-            return;
+            argsVector.add(args[i]);
          }
       }
 
+      String[] organismArgs = new String[argsVector.size()];
+      for (int i = 0, j = argsVector.size(); i < j; i++)
+      {
+         organismArgs[i] = argsVector.get(i);
+      }
       try
       {
-         Morphozoic morphozoic = new Morphozoic(organismName, randomSeed);
+         Morphozoic morphozoic = new Morphozoic(organismName, organismArgs, randomSeed);
       }
       catch (Exception e) {
          System.err.println(e.getMessage());

@@ -23,7 +23,7 @@ public class Organism
    public Cell[][] cells;
 
    // Constructors.
-   public Organism(Integer randomSeed)
+   public Organism(String[] args, Integer randomSeed)
    {
       this.randomSeed = randomSeed;
       init();
@@ -70,15 +70,6 @@ public class Organism
          for (y = 0; y < DIMENSIONS.height; y++)
          {
             cells[x][y].generateMorphogen();
-         }
-      }
-
-      // Do metabolic activities.
-      for (x = 0; x < DIMENSIONS.width; x++)
-      {
-         for (y = 0; y < DIMENSIONS.height; y++)
-         {
-            cells[x][y].doMetabolics();
          }
       }
    }
