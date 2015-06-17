@@ -20,7 +20,7 @@ public class Cell
    // Organism.
    public Organism organism;
 
-   // Morphogenic field.
+   // Morphogenetic field.
    public Morphogen morphogen;
 
    // Cell constructor.
@@ -64,7 +64,7 @@ public class Cell
    }
 
 
-   // Generate morphogenic field.
+   // Generate morphogenetic field.
    public void generateMorphogen()
    {
       if (type != EMPTY)

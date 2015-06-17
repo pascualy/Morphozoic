@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.Vector;
 
 /*
- * Morphogenic field:
+ * Morphogenetic field:
  * A field is a set of enveloping spheres of increasing size.
  * Each sphere spans a central sector of cells and the sectors in its Moore neighborhood.
  * A vector of cell type densities is associated with each sector.

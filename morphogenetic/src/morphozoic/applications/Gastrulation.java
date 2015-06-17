@@ -112,7 +112,7 @@ public class Gastrulation extends Organism
    {
       int x, y, x2, y2, s, s2;
 
-      // Generate morphogenic fields.
+      // Generate morphogenetic fields.
       for (x = 0; x < DIMENSIONS.width; x++)
       {
          for (y = 0; y < DIMENSIONS.height; y++)

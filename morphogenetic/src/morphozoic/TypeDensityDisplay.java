@@ -11,7 +11,7 @@ import javax.swing.*;
 
 public class TypeDensityDisplay extends JFrame implements Runnable, WindowListener
 {
-   // Morphogenic field sphere sector.
+   // Morphogenetic field sphere sector.
    Morphogen.Sphere.Sector sector;
 
    // Display rate (milliseconds).

@@ -64,7 +64,7 @@ public class Organism
       int x;
       int y;
 
-      // Generate morphogenic fields.
+      // Generate morphogenetic fields.
       for (x = 0; x < DIMENSIONS.width; x++)
       {
          for (y = 0; y < DIMENSIONS.height; y++)
