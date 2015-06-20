@@ -38,6 +38,7 @@ import javax.swing.event.*;
 public class Morphozoic extends JFrame implements Runnable
 {
    // Organism.
+   String   organismName;
    Organism organism;
 
    // Update rate (milliseconds).
@@ -90,6 +91,7 @@ public class Morphozoic extends JFrame implements Runnable
                      Integer randomSeed) throws Exception
    {
       // Create the organism.
+      this.organismName = organismName;
       try
       {
          Class<?>       cl   = Class.forName(organismName);
@@ -177,7 +179,10 @@ public class Morphozoic extends JFrame implements Runnable
       {
          if ((updateDelay < MAX_UPDATE_DELAY) || stepButton.getState())
          {
-            organism.update();
+            synchronized (this)
+            {
+               organism.update();
+            }
          }
 
          if (stepButton.getState())
@@ -200,7 +205,10 @@ public class Morphozoic extends JFrame implements Runnable
       while (Thread.currentThread() == displayThread &&
              !displayThread.isInterrupted())
       {
-         updateDisplay();
+         synchronized (this)
+         {
+            updateDisplay();
+         }
 
          try {
             Thread.sleep(DISPLAY_UPDATE_DELAY);
@@ -379,12 +387,26 @@ public class Morphozoic extends JFrame implements Runnable
             }
             else
             {
-               if (organism.cells[x][y].type != Cell.EMPTY)
+               if (organism.isEditable)
                {
-                  displayFieldCell = organism.cells[x][y].clone();
-                  displayFieldCell.generateMorphogen();
-                  displayFieldSphere = 0;
-                  displayField       = true;
+                  if (organism.cells[x][y].type == Cell.EMPTY)
+                  {
+                     organism.cells[x][y].type = 0;
+                  }
+                  else
+                  {
+                     organism.cells[x][y].type = Cell.EMPTY;
+                  }
+               }
+               else
+               {
+                  if (organism.cells[x][y].type != Cell.EMPTY)
+                  {
+                     displayFieldCell = organism.cells[x][y].clone();
+                     displayFieldCell.generateMorphogen();
+                     displayFieldSphere = 0;
+                     displayField       = true;
+                  }
                }
             }
          }

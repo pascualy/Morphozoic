@@ -4,6 +4,7 @@ package morphozoic.applications;
 
 import java.io.DataOutputStream;
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,8 +14,8 @@ import morphozoic.Cell;
 import morphozoic.Metamorph;
 import morphozoic.Organism;
 
-// Gastrulation.
-public class Gastrulation extends Organism
+// Game of Life.
+public class GameOfLife extends Organism
 {
    // Metamorphs.
    public Vector<Metamorph> metamorphs;
@@ -30,9 +31,9 @@ public class Gastrulation extends Organism
    private DataInputStream  reader;
 
    // Constructor.
-   public Gastrulation(String[] args, Integer randomSeed) throws IllegalArgumentException, IOException
+   public GameOfLife(String[] args, Integer randomSeed) throws IllegalArgumentException, IOException
    {
-      String usage = "Usage: java morphozoic.Morphozoic\n\t[-organism morphozoic.applications.Gastrulation]" + morphozoic.Morphozoic.OPTIONS + OPTIONS;
+      String usage = "Usage: java morphozoic.Morphozoic\n\t[-organism morphozoic.applications.GameOfLife]" + morphozoic.Morphozoic.OPTIONS + OPTIONS;
 
       // Get arguments.
       for (int i = 0; i < args.length; i++)
@@ -60,6 +61,7 @@ public class Gastrulation extends Organism
          throw new IllegalArgumentException(usage);
       }
       tick             = 0;
+      isEditable       = true;
       metamorphs       = new Vector<Metamorph>();
       predecessorCells = new Cell[DIMENSIONS.width][DIMENSIONS.height];
       if (genFilename != null)
@@ -78,6 +80,7 @@ public class Gastrulation extends Organism
       }
       if (execFilename != null)
       {
+         isEditable = false;
          try {
             reader = new DataInputStream(new FileInputStream(execFilename));
             int n = reader.readInt();
@@ -86,10 +89,36 @@ public class Gastrulation extends Organism
                throw new IOException("Cell numTypes (" + n + ") in file " + execFilename +
                                      " must equal cell numTypes (" + Cell.numTypes + ")");
             }
-            Metamorph m;
-            while ((m = Metamorph.load(reader)) != null)
+            int     x, y;
+            boolean eof = false;
+            for (x = 0; x < DIMENSIONS.width; x++)
             {
-               metamorphs.add(m);
+               for (y = 0; y < DIMENSIONS.height; y++)
+               {
+                  cells[x][y].type = Cell.EMPTY;
+               }
+            }
+            try
+            {
+               x = reader.readInt();
+               while (x != -1)
+               {
+                  y = reader.readInt();
+                  cells[x][y].type = 0;
+                  x = reader.readInt();
+               }
+            }
+            catch (EOFException e)
+            {
+               eof = true;
+            }
+            if (!eof)
+            {
+               Metamorph m;
+               while ((m = Metamorph.load(reader)) != null)
+               {
+                  metamorphs.add(m);
+               }
             }
          }
          catch (Exception e)
@@ -97,7 +126,6 @@ public class Gastrulation extends Organism
             throw new IOException("Cannot load file " + execFilename +
                                   ":" + e.getMessage());
          }
-         reader.close();
       }
    }
 
@@ -105,7 +133,7 @@ public class Gastrulation extends Organism
    @Override
    public void update()
    {
-      int x, y, x2, y2, s, s2;
+      int x, y, x2, y2;
 
       // Generate morphogenetic fields.
       for (x = 0; x < DIMENSIONS.width; x++)
@@ -127,48 +155,36 @@ public class Gastrulation extends Organism
          }
       }
 
-      // Update cells.
-      if ((execFilename == null) || (tick == 0))
+      // Save initial cell types?
+      if ((tick == 0) && (genFilename != null))
       {
-         // Force update.
-         x = DIMENSIONS.width / 2;
-         y = DIMENSIONS.height / 2;
-         if (tick < 9)
+         try
          {
-            s  = (tick * 2) + 1;
-            s2 = s / 2;
-            for (y2 = 0; y2 < s; y2++)
+            for (x = 0; x < DIMENSIONS.width; x++)
             {
-               for (x2 = 0; x2 < s; x2++)
+               for (y = 0; y < DIMENSIONS.height; y++)
                {
-                  cells[x + x2 - s2][y + y2 - s2].type = randomizer.nextInt(Cell.numTypes);
+                  if (predecessorCells[x][y].type != Cell.EMPTY)
+                  {
+                     writer.writeInt(x);
+                     writer.writeInt(y);
+                  }
                }
             }
-            s -= 2;
-            s2 = s / 2;
-            for (y2 = 0; y2 < s; y2++)
-            {
-               for (x2 = 0; x2 < s; x2++)
-               {
-                  cells[x + x2 - s2][y + y2 - s2].type = Cell.EMPTY;
-               }
-            }
+            writer.writeInt(-1);
+            writer.flush();
          }
-         else if (tick < 20)
+         catch (IOException e)
          {
-            s = x + 4;
-            int t = (9 - tick) + 7;
-            for (x2 = x - 3; x2 < s; x2++)
-            {
-               cells[x2][y - t].type = randomizer.nextInt(Cell.numTypes);
-            }
-            s = x + 3;
-            t++;
-            for (x2 = x - 2; x2 < s; x2++)
-            {
-               cells[x2][y - t].type = Cell.EMPTY;
-            }
+            System.err.println("Cannot save save cell types to " + genFilename + ":" + e.getMessage());
          }
+      }
+
+      // Update cells.
+      if (execFilename == null)
+      {
+         // Step Game of Life.
+         step();
       }
       else
       {
@@ -197,6 +213,7 @@ public class Gastrulation extends Organism
       {
          try
          {
+            // Save metamorphs.
             Vector<Cell> sameParents  = new Vector<Cell>();
             Vector<Cell> otherParents = new Vector<Cell>();
             for (x = 0; x < DIMENSIONS.width; x++)
@@ -279,6 +296,158 @@ public class Gastrulation extends Organism
          catch (IOException e)
          {
             System.err.println("Cannot save metamorphs to " + genFilename + ":" + e.getMessage());
+         }
+      }
+   }
+
+
+   // Step Game of Life.
+   private void step()
+   {
+      int x, y, x2, y2, w, h, count;
+
+      // Clear cells.
+      for (x = 0; x < DIMENSIONS.width; x++)
+      {
+         for (y = 0; y < DIMENSIONS.height; y++)
+         {
+            cells[x][y].type = Cell.EMPTY;
+         }
+      }
+
+      // Apply rules.
+      w = 1;
+      h = 1;
+
+      for (x = 0; x < DIMENSIONS.width; x++)
+      {
+         for (y = 0; y < DIMENSIONS.height; y++)
+         {
+            count = 0;
+            x2    = x - w;
+
+            while (x2 < 0)
+            {
+               x2 += DIMENSIONS.width;
+            }
+
+            y2 = y;
+
+            if (predecessorCells[x2][y2].type != Cell.EMPTY)
+            {
+               count++;
+            }
+
+            y2 = y - h;
+
+            while (y2 < 0)
+            {
+               y2 += DIMENSIONS.height;
+            }
+
+            if (predecessorCells[x2][y2].type != Cell.EMPTY)
+            {
+               count++;
+            }
+
+            y2 = y + h;
+
+            while (y2 >= DIMENSIONS.height)
+            {
+               y2 -= DIMENSIONS.height;
+            }
+
+            if (predecessorCells[x2][y2].type != Cell.EMPTY)
+            {
+               count++;
+            }
+
+            x2 = x;
+            y2 = y - h;
+
+            while (y2 < 0)
+            {
+               y2 += DIMENSIONS.height;
+            }
+
+            if (predecessorCells[x2][y2].type != Cell.EMPTY)
+            {
+               count++;
+            }
+
+            y2 = y + h;
+
+            while (y2 >= DIMENSIONS.height)
+            {
+               y2 -= DIMENSIONS.height;
+            }
+
+            if (predecessorCells[x2][y2].type != Cell.EMPTY)
+            {
+               count++;
+            }
+
+            x2 = x + w;
+
+            while (x2 >= DIMENSIONS.width)
+            {
+               x2 -= DIMENSIONS.width;
+            }
+
+            y2 = y;
+
+            if (predecessorCells[x2][y2].type != Cell.EMPTY)
+            {
+               count++;
+            }
+
+            y2 = y - h;
+
+            while (y2 < 0)
+            {
+               y2 += DIMENSIONS.height;
+            }
+
+            if (predecessorCells[x2][y2].type != Cell.EMPTY)
+            {
+               count++;
+            }
+
+            y2 = y + h;
+
+            while (y2 >= DIMENSIONS.height)
+            {
+               y2 -= DIMENSIONS.height;
+            }
+
+
+            if (predecessorCells[x2][y2].type != Cell.EMPTY)
+            {
+               count++;
+            }
+
+            if (predecessorCells[x][y].type != Cell.EMPTY)
+            {
+               if ((count > 3) || (count < 2))
+               {
+                  cells[x][y].type = Cell.EMPTY;
+               }
+               else
+               {
+                  cells[x][y].type = 0;
+               }
+            }
+            else
+            {
+               if (count == 3)
+               {
+                  cells[x][y].type = 0;
+               }
+               else
+               {
+                  cells[x][y].type = Cell.EMPTY;
+               }
+            }
          }
       }
    }

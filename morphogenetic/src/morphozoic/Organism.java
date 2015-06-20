@@ -22,6 +22,16 @@ public class Organism
    // Cells.
    public Cell[][] cells;
 
+   // Update ticks.
+   public int tick;
+
+   // Metamorph files.
+   public String genFilename  = null;
+   public String execFilename = null;
+
+   // Cells editable?
+   public boolean isEditable = false;
+
    // Constructors.
    public Organism(String[] args, Integer randomSeed)
    {
@@ -39,8 +49,7 @@ public class Organism
    // Initialize.
    private void init()
    {
-      int x;
-      int y;
+      int x, y;
 
       // Random numbers.
       randomizer = new Random(randomSeed);
@@ -55,14 +64,15 @@ public class Organism
             cells[x][y] = new Cell(Cell.EMPTY, x, y, Orientation.NORTH, this);
          }
       }
+
+      tick = 0;
    }
 
 
    // Update.
    public void update()
    {
-      int x;
-      int y;
+      int x, y;
 
       // Generate morphogenetic fields.
       for (x = 0; x < DIMENSIONS.width; x++)
@@ -72,5 +82,7 @@ public class Organism
             cells[x][y].generateMorphogen();
          }
       }
+
+      tick++;
    }
 }
