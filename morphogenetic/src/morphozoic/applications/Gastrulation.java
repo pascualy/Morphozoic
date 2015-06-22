@@ -72,6 +72,8 @@ public class Gastrulation extends Organism
          }
          catch (Exception e)
          {
+             System.err.println("Cannot save file " + genFilename +
+                     ":" + e.getMessage());  
             throw new IOException("Cannot open save file " + genFilename +
                                   ":" + e.getMessage());
          }
@@ -94,6 +96,8 @@ public class Gastrulation extends Organism
          }
          catch (Exception e)
          {
+             System.err.println("Cannot load file " + execFilename +
+                     ":" + e.getMessage());  
             throw new IOException("Cannot load file " + execFilename +
                                   ":" + e.getMessage());
          }

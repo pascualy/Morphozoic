@@ -74,19 +74,20 @@ public class GameOfLife extends Organism
          }
          catch (Exception e)
          {
+           System.err.println("Cannot open save file " + genFilename +
+                     ":" + e.getMessage());        	 
             throw new IOException("Cannot open save file " + genFilename +
                                   ":" + e.getMessage());
          }
       }
       if (execFilename != null)
       {
-         isEditable = false;
          try {
             reader = new DataInputStream(new FileInputStream(execFilename));
             int n = reader.readInt();
             if (n != Cell.numTypes)
-            {
-               throw new IOException("Cell numTypes (" + n + ") in file " + execFilename +
+            {       	
+            	throw new IOException("Cell numTypes (" + n + ") in file " + execFilename +
                                      " must equal cell numTypes (" + Cell.numTypes + ")");
             }
             int     x, y;
@@ -123,6 +124,8 @@ public class GameOfLife extends Organism
          }
          catch (Exception e)
          {
+             System.err.println("Cannot load file " + execFilename +
+                     ":" + e.getMessage()); 
             throw new IOException("Cannot load file " + execFilename +
                                   ":" + e.getMessage());
          }
@@ -207,7 +210,11 @@ public class GameOfLife extends Organism
          }
       }
       tick++;
-
+      if (genFilename != null)
+      {
+    	  isEditable = false;
+      }
+      
       // Create metamorphs that produce the updated organism.
       if (genFilename != null)
       {

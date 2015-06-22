@@ -146,6 +146,8 @@ public class Morphogen
    // Equality test.
    public boolean equals(Morphogen morphogen)
    {
+      float delta = 0.0f;
+
       for (int i = 0; i < SPHERES; i++)
       {
          Sphere s1 = getSphere(i);
@@ -156,14 +158,18 @@ public class Morphogen
             Sphere.Sector t2 = s2.sectors[j];
             for (int k = 0; k < t1.typeDensities.length; k++)
             {
-               if (t1.typeDensities[k] != t2.typeDensities[k])
-               {
-                  return(false);
-               }
+               delta += Math.abs(t1.typeDensities[k] - t2.typeDensities[k]);
             }
          }
       }
-      return(true);
+      if (delta == 0.0f)
+      {
+         return(true);
+      }
+      else
+      {
+         return(false);
+      }
    }
 
 

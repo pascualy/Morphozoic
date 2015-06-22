@@ -29,6 +29,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Vector;
 
@@ -98,9 +99,9 @@ public class Morphozoic extends JFrame implements Runnable
          Constructor<?> cons = cl.getConstructor(String[].class, Integer.class );
          organism = (Organism)cons.newInstance(organismArgs, randomSeed);
       }
-      catch (Exception e) {
-         throw new Exception("Cannot create organism " + organismName +
-                             ":" + e.getMessage());
+      catch (Exception e)
+      {
+         throw new Exception("Cannot create organism " + organismName);
       }
 
       // Create display.
