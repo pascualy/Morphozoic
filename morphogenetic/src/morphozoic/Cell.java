@@ -8,8 +8,8 @@ import java.awt.Color;
 public class Cell
 {
    // Type.
-   public static int       DEFAULT_NUM_TYPES = 3;
-   public static int       numTypes          = DEFAULT_NUM_TYPES;
+   public static final int DEFAULT_NUM_TYPES = 3;
+   public static int       NUM_TYPES         = DEFAULT_NUM_TYPES;
    public int              type;
    public static final int EMPTY = -1;
 
@@ -58,7 +58,7 @@ public class Cell
       }
       else
       {
-         float rgb = (1.0f / numTypes) * (float)(type);
+         float rgb = (1.0f / NUM_TYPES) * (float)(type);
          return(new Color(rgb, rgb, rgb));
       }
    }

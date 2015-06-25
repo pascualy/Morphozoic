@@ -29,7 +29,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Vector;
 
@@ -85,7 +84,7 @@ public class Morphozoic extends JFrame implements Runnable
    int         fontHeight;
 
    // Options.
-   public static final String OPTIONS = "\n\t[-numCellTypes <number of cell types>]\n\t[-randomSeed <random seed>]";
+   public static final String OPTIONS = "\n\t[-numCellTypes <number of cell types>]\n\t[-numSpheres <number of morphogenetic spheres>]\n\t[-sectorDimension <sphere sector dimension>]\n\t[-randomSeed <random seed>]";
 
    // Constructor.
    public Morphozoic(String organismName, String[] organismArgs,
@@ -238,7 +237,8 @@ public class Morphozoic extends JFrame implements Runnable
          if (displayField)
          {
             Morphogen.Sphere sphere = displayFieldCell.morphogen.getSphere(displayFieldSphere);
-            for (int i = 0; i < 9; i++)
+            int              n      = Morphogen.SECTOR_DIMENSION * Morphogen.SECTOR_DIMENSION;
+            for (int i = 0; i < n; i++)
             {
                Morphogen.Sphere.Sector sector = sphere.getSector(i);
                for (y2 = 0; y2 < sector.d; y2++)
@@ -259,7 +259,7 @@ public class Morphozoic extends JFrame implements Runnable
                }
             }
             imageGraphics.setColor(Color.red);
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < n; i++)
             {
                Morphogen.Sphere.Sector sector = sphere.getSector(i);
                x3 = sector.dx + displayFieldCell.x;
@@ -347,7 +347,8 @@ public class Morphozoic extends JFrame implements Runnable
                int              h            = organism.DIMENSIONS.height;
                Morphogen.Sphere sphere       = displayFieldCell.morphogen.getSphere(displayFieldSphere);
                boolean          selectSector = false;
-               for (int i = 0; i < 9; i++)
+               int              n            = Morphogen.SECTOR_DIMENSION * Morphogen.SECTOR_DIMENSION;
+               for (int i = 0; i < n; i++)
                {
                   Morphogen.Sphere.Sector sector = sphere.getSector(i);
                   int xmin = sector.dx + displayFieldCell.x;
@@ -436,7 +437,7 @@ public class Morphozoic extends JFrame implements Runnable
          {
             if (e.getKeyChar() == ' ')
             {
-               displayFieldSphere = (displayFieldSphere + 1) % Morphogen.SPHERES;
+               displayFieldSphere = (displayFieldSphere + 1) % Morphogen.NUM_SPHERES;
             }
             else
             {
@@ -449,7 +450,7 @@ public class Morphozoic extends JFrame implements Runnable
    // Main.
    public static void main(String[] args)
    {
-      String usage        = "Usage: java morphozoic.Morphozoic\n\t[-organism <morphozoic.applications.<Organism class name>]" + OPTIONS + "\n\t[organism-specific options]";
+      String usage        = "Usage: java morphozoic.Morphozoic\n\t[-organism morphozoic.applications.<Organism class name>]" + OPTIONS + "\n\t[organism-specific options]";
       String organismName = Organism.DEFAULT_ORGANISM;
       int    randomSeed   = Organism.DEFAULT_RANDOM_SEED;
 
@@ -465,10 +466,32 @@ public class Morphozoic extends JFrame implements Runnable
          else if (args[i].equals("-numCellTypes"))
          {
             i++;
-            Cell.numTypes = Integer.parseInt(args[i]);
-            if (Cell.numTypes <= 0)
+            Cell.NUM_TYPES = Integer.parseInt(args[i]);
+            if (Cell.NUM_TYPES <= 0)
             {
                System.err.println("Number of cell types must be positive");
+               System.err.println(usage);
+               return;
+            }
+         }
+         else if (args[i].equals("-numSpheres"))
+         {
+            i++;
+            Morphogen.NUM_SPHERES = Integer.parseInt(args[i]);
+            if (Morphogen.NUM_SPHERES <= 0)
+            {
+               System.err.println("Number of spheres must be positive");
+               System.err.println(usage);
+               return;
+            }
+         }
+         else if (args[i].equals("-sectorDimension"))
+         {
+            i++;
+            Morphogen.SECTOR_DIMENSION = Integer.parseInt(args[i]);
+            if ((Morphogen.SECTOR_DIMENSION <= 0) || ((Morphogen.SECTOR_DIMENSION % 2) != 1))
+            {
+               System.err.println("Sector dimension must be positive odd number");
                System.err.println(usage);
                return;
             }

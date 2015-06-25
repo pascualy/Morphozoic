@@ -11,6 +11,7 @@ import java.util.Vector;
 
 import morphozoic.Cell;
 import morphozoic.Metamorph;
+import morphozoic.Morphogen;
 import morphozoic.Organism;
 
 // Gastrulation.
@@ -67,13 +68,15 @@ public class Gastrulation extends Organism
          try
          {
             writer = new DataOutputStream(new FileOutputStream(genFilename));
-            writer.writeInt(Cell.numTypes);
+            writer.writeInt(Cell.NUM_TYPES);
+            writer.writeInt(Morphogen.NUM_SPHERES);
+            writer.writeInt(Morphogen.SECTOR_DIMENSION);
             writer.flush();
          }
          catch (Exception e)
          {
-             System.err.println("Cannot save file " + genFilename +
-                     ":" + e.getMessage());  
+            System.err.println("Cannot save file " + genFilename +
+                               ":" + e.getMessage());
             throw new IOException("Cannot open save file " + genFilename +
                                   ":" + e.getMessage());
          }
@@ -83,10 +86,22 @@ public class Gastrulation extends Organism
          try {
             reader = new DataInputStream(new FileInputStream(execFilename));
             int n = reader.readInt();
-            if (n != Cell.numTypes)
+            if (n != Cell.NUM_TYPES)
             {
                throw new IOException("Cell numTypes (" + n + ") in file " + execFilename +
-                                     " must equal cell numTypes (" + Cell.numTypes + ")");
+                                     " must equal cell numTypes (" + Cell.NUM_TYPES + ")");
+            }
+            n = reader.readInt();
+            if (n != Morphogen.NUM_SPHERES)
+            {
+               throw new IOException("Morphogen numSpheres (" + n + ") in file " + execFilename +
+                                     " must equal numSpheres (" + Morphogen.NUM_SPHERES + ")");
+            }
+            n = reader.readInt();
+            if (n != Morphogen.SECTOR_DIMENSION)
+            {
+               throw new IOException("Morphogen sectorDimension (" + n + ") in file " + execFilename +
+                                     " must equal sectorDimension (" + Morphogen.SECTOR_DIMENSION + ")");
             }
             Metamorph m;
             while ((m = Metamorph.load(reader)) != null)
@@ -96,8 +111,8 @@ public class Gastrulation extends Organism
          }
          catch (Exception e)
          {
-             System.err.println("Cannot load file " + execFilename +
-                     ":" + e.getMessage());  
+            System.err.println("Cannot load file " + execFilename +
+                               ":" + e.getMessage());
             throw new IOException("Cannot load file " + execFilename +
                                   ":" + e.getMessage());
          }
@@ -145,7 +160,7 @@ public class Gastrulation extends Organism
             {
                for (x2 = 0; x2 < s; x2++)
                {
-                  cells[x + x2 - s2][y + y2 - s2].type = randomizer.nextInt(Cell.numTypes);
+                  cells[x + x2 - s2][y + y2 - s2].type = randomizer.nextInt(Cell.NUM_TYPES);
                }
             }
             s -= 2;
@@ -164,7 +179,7 @@ public class Gastrulation extends Organism
             int t = (9 - tick) + 7;
             for (x2 = x - 3; x2 < s; x2++)
             {
-               cells[x2][y - t].type = randomizer.nextInt(Cell.numTypes);
+               cells[x2][y - t].type = randomizer.nextInt(Cell.NUM_TYPES);
             }
             s = x + 3;
             t++;
@@ -236,18 +251,18 @@ public class Gastrulation extends Organism
                         if (sameParents.size() > 0)
                         {
                            // Prefer to divide parent of same type.
-                           parent = sameParents.get(randomizer.nextInt(sameParents.size()));
+                           parent = sameParents.get(0);
                         }
                         else if (otherParents.size() > 0)
                         {
-                           parent = otherParents.get(randomizer.nextInt(otherParents.size()));
+                           parent = otherParents.get(0);
                         }
                         if (parent != null)
                         {
                            Cell clone = cells[x][y].clone();
                            clone.x -= parent.x;
                            clone.y -= parent.y;
-                           Metamorph.division(parent.morphogen, clone).save(writer);
+                           saveMetamorph(Metamorph.division(parent.morphogen, clone));
                         }
                      }
                      else
@@ -255,12 +270,17 @@ public class Gastrulation extends Organism
                         if (cells[x][y].type != predecessorCells[x][y].type)
                         {
                            // Type change.
-                           Metamorph.type(predecessorCells[x][y].morphogen, cells[x][y].type).save(writer);
+                           saveMetamorph(Metamorph.type(predecessorCells[x][y].morphogen, cells[x][y].type));
                         }
                         else if (cells[x][y].orientation != predecessorCells[x][y].orientation)
                         {
                            // Orientation change.
-                           Metamorph.orientation(predecessorCells[x][y].morphogen, cells[x][y].orientation).save(writer);
+                           saveMetamorph(Metamorph.orientation(predecessorCells[x][y].morphogen, cells[x][y].orientation));
+                        }
+                        else
+                        {
+                           // Stasis.
+                           saveMetamorph(Metamorph.stasis(predecessorCells[x][y].morphogen));
                         }
                      }
                   }
@@ -274,7 +294,7 @@ public class Gastrulation extends Organism
                   {
                      if (predecessorCells[x][y].type != Cell.EMPTY)
                      {
-                        Metamorph.death(predecessorCells[x][y].morphogen).save(writer);
+                        saveMetamorph(Metamorph.death(predecessorCells[x][y].morphogen));
                      }
                   }
                }
@@ -285,5 +305,20 @@ public class Gastrulation extends Organism
             System.err.println("Cannot save metamorphs to " + genFilename + ":" + e.getMessage());
          }
       }
+   }
+
+
+   // Save metamorph.
+   private void saveMetamorph(Metamorph metamorph) throws IOException
+   {
+      for (Metamorph m : metamorphs)
+      {
+         if (m.equals(metamorph))
+         {
+            return;
+         }
+      }
+      metamorphs.add(metamorph);
+      metamorph.save(writer);
    }
 }

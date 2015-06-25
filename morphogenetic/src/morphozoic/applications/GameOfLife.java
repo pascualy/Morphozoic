@@ -12,6 +12,7 @@ import java.util.Vector;
 
 import morphozoic.Cell;
 import morphozoic.Metamorph;
+import morphozoic.Morphogen;
 import morphozoic.Organism;
 
 // Game of Life.
@@ -69,13 +70,15 @@ public class GameOfLife extends Organism
          try
          {
             writer = new DataOutputStream(new FileOutputStream(genFilename));
-            writer.writeInt(Cell.numTypes);
+            writer.writeInt(Cell.NUM_TYPES);
+            writer.writeInt(Morphogen.NUM_SPHERES);
+            writer.writeInt(Morphogen.SECTOR_DIMENSION);
             writer.flush();
          }
          catch (Exception e)
          {
-           System.err.println("Cannot open save file " + genFilename +
-                     ":" + e.getMessage());        	 
+            System.err.println("Cannot open save file " + genFilename +
+                               ":" + e.getMessage());
             throw new IOException("Cannot open save file " + genFilename +
                                   ":" + e.getMessage());
          }
@@ -85,10 +88,22 @@ public class GameOfLife extends Organism
          try {
             reader = new DataInputStream(new FileInputStream(execFilename));
             int n = reader.readInt();
-            if (n != Cell.numTypes)
-            {       	
-            	throw new IOException("Cell numTypes (" + n + ") in file " + execFilename +
-                                     " must equal cell numTypes (" + Cell.numTypes + ")");
+            if (n != Cell.NUM_TYPES)
+            {
+               throw new IOException("Cell numTypes (" + n + ") in file " + execFilename +
+                                     " must equal cell numTypes (" + Cell.NUM_TYPES + ")");
+            }
+            n = reader.readInt();
+            if (n != Morphogen.NUM_SPHERES)
+            {
+               throw new IOException("Morphogen numSpheres (" + n + ") in file " + execFilename +
+                                     " must equal numSpheres (" + Morphogen.NUM_SPHERES + ")");
+            }
+            n = reader.readInt();
+            if (n != Morphogen.SECTOR_DIMENSION)
+            {
+               throw new IOException("Morphogen sectorDimension (" + n + ") in file " + execFilename +
+                                     " must equal sectorDimension (" + Morphogen.SECTOR_DIMENSION + ")");
             }
             int     x, y;
             boolean eof = false;
@@ -124,8 +139,8 @@ public class GameOfLife extends Organism
          }
          catch (Exception e)
          {
-             System.err.println("Cannot load file " + execFilename +
-                     ":" + e.getMessage()); 
+            System.err.println("Cannot load file " + execFilename +
+                               ":" + e.getMessage());
             throw new IOException("Cannot load file " + execFilename +
                                   ":" + e.getMessage());
          }
@@ -191,18 +206,58 @@ public class GameOfLife extends Organism
       }
       else
       {
-         // Execute metamorphs.
+         // Repair cells to match morphogens.
+         boolean morphCells = true;
+         @SuppressWarnings("unchecked")
+         Vector<Metamorph> cellMorphs[][] = new Vector[DIMENSIONS.width][DIMENSIONS.height];
          for (x = 0; x < DIMENSIONS.width; x++)
          {
             for (y = 0; y < DIMENSIONS.height; y++)
             {
                if (predecessorCells[x][y].type != Cell.EMPTY)
                {
-                  for (Metamorph morph : metamorphs)
+                  float dist = 0.0f;
+                  for (Metamorph m : metamorphs)
                   {
-                     if (predecessorCells[x][y].morphogen.equals(morph.morphogen))
+                     float d = predecessorCells[x][y].morphogen.compare(m.morphogen);
+                     if ((cellMorphs[x][y] == null) || (d <= dist))
                      {
-                        morph.exec(cells[x][y]);
+                        if (cellMorphs[x][y] == null)
+                        {
+                           cellMorphs[x][y] = new Vector<Metamorph>();
+                        }
+                        else
+                        {
+                           if (d < dist)
+                           {
+                              cellMorphs[x][y].clear();
+                           }
+                        }
+                        cellMorphs[x][y].add(m);
+                        dist = d;
+                     }
+                  }
+                  if (dist > 0.0f)
+                  {
+                     // Repair.
+                     morphCells = false;
+                  }
+               }
+            }
+         }
+
+         // Execute metamorphs?
+         if (morphCells)
+         {
+            for (x = 0; x < DIMENSIONS.width; x++)
+            {
+               for (y = 0; y < DIMENSIONS.height; y++)
+               {
+                  if (cellMorphs[x][y] != null)
+                  {
+                     for (Object m : cellMorphs[x][y])
+                     {
+                        ((Metamorph)m).exec(cells[x][y]);
                      }
                   }
                }
@@ -212,9 +267,9 @@ public class GameOfLife extends Organism
       tick++;
       if (genFilename != null)
       {
-    	  isEditable = false;
+         isEditable = false;
       }
-      
+
       // Create metamorphs that produce the updated organism.
       if (genFilename != null)
       {
@@ -256,18 +311,18 @@ public class GameOfLife extends Organism
                         if (sameParents.size() > 0)
                         {
                            // Prefer to divide parent of same type.
-                           parent = sameParents.get(randomizer.nextInt(sameParents.size()));
+                           parent = sameParents.get(0);
                         }
                         else if (otherParents.size() > 0)
                         {
-                           parent = otherParents.get(randomizer.nextInt(otherParents.size()));
+                           parent = otherParents.get(0);
                         }
                         if (parent != null)
                         {
                            Cell clone = cells[x][y].clone();
                            clone.x -= parent.x;
                            clone.y -= parent.y;
-                           Metamorph.division(parent.morphogen, clone).save(writer);
+                           saveMetamorph(Metamorph.division(parent.morphogen, clone));
                         }
                      }
                      else
@@ -275,12 +330,17 @@ public class GameOfLife extends Organism
                         if (cells[x][y].type != predecessorCells[x][y].type)
                         {
                            // Type change.
-                           Metamorph.type(predecessorCells[x][y].morphogen, cells[x][y].type).save(writer);
+                           saveMetamorph(Metamorph.type(predecessorCells[x][y].morphogen, cells[x][y].type));
                         }
                         else if (cells[x][y].orientation != predecessorCells[x][y].orientation)
                         {
                            // Orientation change.
-                           Metamorph.orientation(predecessorCells[x][y].morphogen, cells[x][y].orientation).save(writer);
+                           saveMetamorph(Metamorph.orientation(predecessorCells[x][y].morphogen, cells[x][y].orientation));
+                        }
+                        else
+                        {
+                           // Stasis.
+                           saveMetamorph(Metamorph.stasis(predecessorCells[x][y].morphogen));
                         }
                      }
                   }
@@ -294,7 +354,7 @@ public class GameOfLife extends Organism
                   {
                      if (predecessorCells[x][y].type != Cell.EMPTY)
                      {
-                        Metamorph.death(predecessorCells[x][y].morphogen).save(writer);
+                        saveMetamorph(Metamorph.death(predecessorCells[x][y].morphogen));
                      }
                   }
                }
@@ -305,6 +365,21 @@ public class GameOfLife extends Organism
             System.err.println("Cannot save metamorphs to " + genFilename + ":" + e.getMessage());
          }
       }
+   }
+
+
+   // Save metamorph.
+   private void saveMetamorph(Metamorph metamorph) throws IOException
+   {
+      for (Metamorph m : metamorphs)
+      {
+         if (m.equals(metamorph))
+         {
+            return;
+         }
+      }
+      metamorphs.add(metamorph);
+      metamorph.save(writer);
    }
 
 

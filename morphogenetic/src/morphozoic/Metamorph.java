@@ -17,12 +17,13 @@ public class Metamorph
       DIVISION,
       DEATH,
       TYPE,
-      ORIENTATION;
+      ORIENTATION,
+      STASIS;
    }
-   Activity    activity;
-   Cell        cell;
-   int         type;
-   Orientation orientation;
+   public Activity    activity;
+   public Cell        cell;
+   public int         type;
+   public Orientation orientation;
 
    // Constructors.
    public Metamorph(Morphogen morphogen, Activity activity)
@@ -81,6 +82,57 @@ public class Metamorph
    }
 
 
+   public static Metamorph stasis(Morphogen morphogen)
+   {
+      return(new Metamorph(morphogen, Activity.STASIS));
+   }
+
+
+   // Equality test.
+   public boolean equals(Metamorph m)
+   {
+      if (m.morphogen.hashCode != morphogen.hashCode)
+      {
+         return(false);
+      }
+      if (m.activity != activity)
+      {
+         return(false);
+      }
+      switch (activity)
+      {
+      case DIVISION:
+         if ((m.cell.x != cell.x) || (m.cell.y != cell.y) ||
+             (m.cell.type != cell.type) || (m.cell.orientation != cell.orientation))
+         {
+            return(false);
+         }
+         break;
+
+      case DEATH:
+         break;
+
+      case TYPE:
+         if (m.type != type)
+         {
+            return(false);
+         }
+         break;
+
+      case ORIENTATION:
+         if (m.orientation != orientation)
+         {
+            return(false);
+         }
+         break;
+
+      case STASIS:
+         break;
+      }
+      return(true);
+   }
+
+
    // Execute.
    public void exec(Cell cell)
    {
@@ -104,6 +156,9 @@ public class Metamorph
 
       case ORIENTATION:
          cell.orientation = orientation;
+         break;
+
+      case STASIS:
          break;
       }
    }
@@ -135,6 +190,10 @@ public class Metamorph
       case ORIENTATION:
          writer.writeInt(3);
          writer.writeInt(orientation.ordinal());
+         break;
+
+      case STASIS:
+         writer.writeInt(4);
          break;
       }
    }
@@ -169,11 +228,48 @@ public class Metamorph
          case 3:
             o = reader.readInt();
             return(new Metamorph(morphogen, Activity.ORIENTATION, Orientation.fromInt(o)));
+
+         case 4:
+            return(new Metamorph(morphogen, Activity.STASIS));
          }
       }
       catch (EOFException e) {
          return(null);
       }
       return(null);
+   }
+
+
+   // Print.
+   public void print()
+   {
+      System.out.println("Metamorph:");
+      morphogen.print();
+      System.out.print("  Activity: " + activity);
+      switch (activity)
+      {
+      case DIVISION:
+         System.out.print(" cell.type=" + cell.type);
+         System.out.print(" cell.x=" + cell.x);
+         System.out.print(" cell.y=" + cell.y);
+         System.out.println(" cell.orientation=" + cell.orientation);
+         break;
+
+      case DEATH:
+         System.out.println();
+         break;
+
+      case TYPE:
+         System.out.println(" type=" + type);
+         break;
+
+      case ORIENTATION:
+         System.out.println(" orientation=" + orientation);
+         break;
+
+      case STASIS:
+         System.out.println();
+         break;
+      }
    }
 }

@@ -93,8 +93,8 @@ public class TypeDensityDisplay extends JFrame implements Runnable, WindowListen
       imageGraphics.setColor(Color.white);
       imageGraphics.fillRect(0, 0, imageSize.width, imageSize.height);
 
-      int w = imageSize.width / Cell.numTypes;
-      for (int i = 0, x = 0; i < Cell.numTypes; i++, x += w)
+      int w = imageSize.width / Cell.NUM_TYPES;
+      for (int i = 0, x = 0; i < Cell.NUM_TYPES; i++, x += w)
       {
          imageGraphics.setColor(Cell.getColor(i));
          float h = (float)imageSize.height * sector.getTypeDensity(i);
@@ -102,7 +102,7 @@ public class TypeDensityDisplay extends JFrame implements Runnable, WindowListen
       }
 
       imageGraphics.setColor(Color.black);
-      for (int i = 0, j = Cell.numTypes - 1, x = w; i < j; i++, x += w)
+      for (int i = 0, j = Cell.NUM_TYPES - 1, x = w; i < j; i++, x += w)
       {
          imageGraphics.drawLine(x, 0, x, imageSize.height);
       }
