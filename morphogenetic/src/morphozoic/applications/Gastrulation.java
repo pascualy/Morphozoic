@@ -13,6 +13,7 @@ import morphozoic.Cell;
 import morphozoic.Metamorph;
 import morphozoic.Morphogen;
 import morphozoic.Organism;
+import morphozoic.Organism.MetamorphDistance;
 
 // Gastrulation.
 public class Gastrulation extends Organism
@@ -117,6 +118,7 @@ public class Gastrulation extends Organism
                                   ":" + e.getMessage());
          }
          reader.close();
+         isEditable = true;
       }
    }
 
@@ -191,21 +193,59 @@ public class Gastrulation extends Organism
       }
       else
       {
-         // Execute metamorphs.
+         // Match metamorphs to cell morphogens.
+         MetamorphDistance cellMorphs[][] = new MetamorphDistance[DIMENSIONS.width][DIMENSIONS.height];
          for (x = 0; x < DIMENSIONS.width; x++)
          {
             for (y = 0; y < DIMENSIONS.height; y++)
             {
                if (predecessorCells[x][y].type != Cell.EMPTY)
                {
-                  for (Metamorph morph : metamorphs)
+                  float dist = 0.0f;
+                  for (Metamorph m : metamorphs)
                   {
-                     if (predecessorCells[x][y].morphogen.equals(morph.morphogen))
+                     float d = predecessorCells[x][y].morphogen.compare(m.morphogen);
+                     if ((cellMorphs[x][y] == null) || (d < dist))
                      {
-                        morph.exec(cells[x][y]);
+                        cellMorphs[x][y] = new MetamorphDistance(d, m);
+                        dist             = d;
                      }
                   }
                }
+            }
+         }
+
+         // Execute metamorphs by descending morphogen distance.
+         boolean exec = true;
+         while (exec)
+         {
+            exec = false;
+            float     dist  = -1.0f;
+            Metamorph morph = null;
+            int       cx    = 0;
+            int       cy    = 0;
+            for (x = 0; x < DIMENSIONS.width; x++)
+            {
+               for (y = 0; y < DIMENSIONS.height; y++)
+               {
+                  MetamorphDistance m = cellMorphs[x][y];
+                  if (m != null)
+                  {
+                     if ((dist < 0.0f) || (m.morphogenDistance > dist))
+                     {
+                        dist  = m.morphogenDistance;
+                        morph = m.metamorph;
+                        cx    = x;
+                        cy    = y;
+                     }
+                  }
+               }
+            }
+            if (morph != null)
+            {
+               morph.exec(cells[cx][cy]);
+               cellMorphs[cx][cy] = null;
+               exec = true;
             }
          }
       }
@@ -216,86 +256,13 @@ public class Gastrulation extends Organism
       {
          try
          {
-            Vector<Cell> sameParents  = new Vector<Cell>();
-            Vector<Cell> otherParents = new Vector<Cell>();
             for (x = 0; x < DIMENSIONS.width; x++)
             {
                for (y = 0; y < DIMENSIONS.height; y++)
                {
-                  if (cells[x][y].type != Cell.EMPTY)
+                  if (predecessorCells[x][y].type != Cell.EMPTY)
                   {
-                     if (predecessorCells[x][y].type == Cell.EMPTY)
-                     {
-                        // Determine parent of new cell.
-                        for (x2 = x - 1; x2 <= x + 1; x2++)
-                        {
-                           for (y2 = y - 1; y2 <= y + 1; y2++)
-                           {
-                              if ((x2 == x) && (y2 == y)) { continue; }
-                              if ((x2 < 0) || (x2 >= DIMENSIONS.width)) { continue; }
-                              if ((y2 < 0) || (y2 >= DIMENSIONS.height)) { continue; }
-                              if (predecessorCells[x2][y2].type != Cell.EMPTY)
-                              {
-                                 if (predecessorCells[x2][y2].type == cells[x][y].type)
-                                 {
-                                    sameParents.add(predecessorCells[x2][y2]);
-                                 }
-                                 else
-                                 {
-                                    otherParents.add(predecessorCells[x2][y2]);
-                                 }
-                              }
-                           }
-                        }
-                        Cell parent = null;
-                        if (sameParents.size() > 0)
-                        {
-                           // Prefer to divide parent of same type.
-                           parent = sameParents.get(0);
-                        }
-                        else if (otherParents.size() > 0)
-                        {
-                           parent = otherParents.get(0);
-                        }
-                        if (parent != null)
-                        {
-                           Cell clone = cells[x][y].clone();
-                           clone.x -= parent.x;
-                           clone.y -= parent.y;
-                           saveMetamorph(Metamorph.division(parent.morphogen, clone));
-                        }
-                     }
-                     else
-                     {
-                        if (cells[x][y].type != predecessorCells[x][y].type)
-                        {
-                           // Type change.
-                           saveMetamorph(Metamorph.type(predecessorCells[x][y].morphogen, cells[x][y].type));
-                        }
-                        else if (cells[x][y].orientation != predecessorCells[x][y].orientation)
-                        {
-                           // Orientation change.
-                           saveMetamorph(Metamorph.orientation(predecessorCells[x][y].morphogen, cells[x][y].orientation));
-                        }
-                        else
-                        {
-                           // Stasis.
-                           saveMetamorph(Metamorph.stasis(predecessorCells[x][y].morphogen));
-                        }
-                     }
-                  }
-               }
-            }
-            for (x = 0; x < DIMENSIONS.width; x++)
-            {
-               for (y = 0; y < DIMENSIONS.height; y++)
-               {
-                  if (cells[x][y].type == Cell.EMPTY)
-                  {
-                     if (predecessorCells[x][y].type != Cell.EMPTY)
-                     {
-                        saveMetamorph(Metamorph.death(predecessorCells[x][y].morphogen));
-                     }
+                     saveMetamorph(predecessorCells[x][y].morphogen, cells[x][y]);
                   }
                }
             }
@@ -309,8 +276,10 @@ public class Gastrulation extends Organism
 
 
    // Save metamorph.
-   private void saveMetamorph(Metamorph metamorph) throws IOException
+   private void saveMetamorph(Morphogen morphogen, Cell cell) throws IOException
    {
+      Metamorph metamorph = new Metamorph(morphogen, cell);
+
       for (Metamorph m : metamorphs)
       {
          if (m.equals(metamorph))

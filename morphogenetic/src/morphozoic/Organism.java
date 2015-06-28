@@ -22,6 +22,9 @@ public class Organism
    // Cells.
    public Cell[][] cells;
 
+   // Cells editable?
+   public boolean isEditable = false;
+
    // Update ticks.
    public int tick;
 
@@ -29,8 +32,18 @@ public class Organism
    public String genFilename  = null;
    public String execFilename = null;
 
-   // Cells editable?
-   public boolean isEditable = false;
+   // Metamorph morphogen distance.
+   public class MetamorphDistance
+   {
+      public float     morphogenDistance;
+      public Metamorph metamorph;
+
+      public MetamorphDistance(float d, Metamorph m)
+      {
+         morphogenDistance = d;
+         metamorph         = m;
+      }
+   }
 
    // Constructors.
    public Organism(String[] args, Integer randomSeed)

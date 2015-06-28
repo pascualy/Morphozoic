@@ -3,6 +3,10 @@
 package morphozoic;
 
 import java.awt.Color;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
 
 // Cell.
 public class Cell

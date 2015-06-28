@@ -8,6 +8,7 @@ import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Vector;
 
 import morphozoic.Cell;
@@ -151,7 +152,7 @@ public class GameOfLife extends Organism
    @Override
    public void update()
    {
-      int x, y, x2, y2;
+      int x, y;
 
       // Generate morphogenetic fields.
       for (x = 0; x < DIMENSIONS.width; x++)
@@ -206,10 +207,8 @@ public class GameOfLife extends Organism
       }
       else
       {
-         // Repair cells to match morphogens.
-         boolean morphCells = true;
-         @SuppressWarnings("unchecked")
-         Vector<Metamorph> cellMorphs[][] = new Vector[DIMENSIONS.width][DIMENSIONS.height];
+         // Match metamorphs to cell morphogens.
+         MetamorphDistance cellMorphs[][] = new MetamorphDistance[DIMENSIONS.width][DIMENSIONS.height];
          for (x = 0; x < DIMENSIONS.width; x++)
          {
             for (y = 0; y < DIMENSIONS.height; y++)
@@ -220,47 +219,47 @@ public class GameOfLife extends Organism
                   for (Metamorph m : metamorphs)
                   {
                      float d = predecessorCells[x][y].morphogen.compare(m.morphogen);
-                     if ((cellMorphs[x][y] == null) || (d <= dist))
+                     if ((cellMorphs[x][y] == null) || (d < dist))
                      {
-                        if (cellMorphs[x][y] == null)
-                        {
-                           cellMorphs[x][y] = new Vector<Metamorph>();
-                        }
-                        else
-                        {
-                           if (d < dist)
-                           {
-                              cellMorphs[x][y].clear();
-                           }
-                        }
-                        cellMorphs[x][y].add(m);
-                        dist = d;
+                        cellMorphs[x][y] = new MetamorphDistance(d, m);
+                        dist             = d;
                      }
-                  }
-                  if (dist > 0.0f)
-                  {
-                     // Repair.
-                     morphCells = false;
                   }
                }
             }
          }
 
-         // Execute metamorphs?
-         if (morphCells)
+         // Execute metamorphs by descending morphogen distance.
+         boolean exec = true;
+         while (exec)
          {
+            exec = false;
+            float     dist  = -1.0f;
+            Metamorph morph = null;
+            int       cx    = 0;
+            int       cy    = 0;
             for (x = 0; x < DIMENSIONS.width; x++)
             {
                for (y = 0; y < DIMENSIONS.height; y++)
                {
-                  if (cellMorphs[x][y] != null)
+                  MetamorphDistance m = cellMorphs[x][y];
+                  if (m != null)
                   {
-                     for (Object m : cellMorphs[x][y])
+                     if ((dist < 0.0f) || (m.morphogenDistance > dist))
                      {
-                        ((Metamorph)m).exec(cells[x][y]);
+                        dist  = m.morphogenDistance;
+                        morph = m.metamorph;
+                        cx    = x;
+                        cy    = y;
                      }
                   }
                }
+            }
+            if (morph != null)
+            {
+               morph.exec(cells[cx][cy]);
+               cellMorphs[cx][cy] = null;
+               exec = true;
             }
          }
       }
@@ -275,87 +274,13 @@ public class GameOfLife extends Organism
       {
          try
          {
-            // Save metamorphs.
-            Vector<Cell> sameParents  = new Vector<Cell>();
-            Vector<Cell> otherParents = new Vector<Cell>();
             for (x = 0; x < DIMENSIONS.width; x++)
             {
                for (y = 0; y < DIMENSIONS.height; y++)
                {
-                  if (cells[x][y].type != Cell.EMPTY)
+                  if (predecessorCells[x][y].type != Cell.EMPTY)
                   {
-                     if (predecessorCells[x][y].type == Cell.EMPTY)
-                     {
-                        // Determine parent of new cell.
-                        for (x2 = x - 1; x2 <= x + 1; x2++)
-                        {
-                           for (y2 = y - 1; y2 <= y + 1; y2++)
-                           {
-                              if ((x2 == x) && (y2 == y)) { continue; }
-                              if ((x2 < 0) || (x2 >= DIMENSIONS.width)) { continue; }
-                              if ((y2 < 0) || (y2 >= DIMENSIONS.height)) { continue; }
-                              if (predecessorCells[x2][y2].type != Cell.EMPTY)
-                              {
-                                 if (predecessorCells[x2][y2].type == cells[x][y].type)
-                                 {
-                                    sameParents.add(predecessorCells[x2][y2]);
-                                 }
-                                 else
-                                 {
-                                    otherParents.add(predecessorCells[x2][y2]);
-                                 }
-                              }
-                           }
-                        }
-                        Cell parent = null;
-                        if (sameParents.size() > 0)
-                        {
-                           // Prefer to divide parent of same type.
-                           parent = sameParents.get(0);
-                        }
-                        else if (otherParents.size() > 0)
-                        {
-                           parent = otherParents.get(0);
-                        }
-                        if (parent != null)
-                        {
-                           Cell clone = cells[x][y].clone();
-                           clone.x -= parent.x;
-                           clone.y -= parent.y;
-                           saveMetamorph(Metamorph.division(parent.morphogen, clone));
-                        }
-                     }
-                     else
-                     {
-                        if (cells[x][y].type != predecessorCells[x][y].type)
-                        {
-                           // Type change.
-                           saveMetamorph(Metamorph.type(predecessorCells[x][y].morphogen, cells[x][y].type));
-                        }
-                        else if (cells[x][y].orientation != predecessorCells[x][y].orientation)
-                        {
-                           // Orientation change.
-                           saveMetamorph(Metamorph.orientation(predecessorCells[x][y].morphogen, cells[x][y].orientation));
-                        }
-                        else
-                        {
-                           // Stasis.
-                           saveMetamorph(Metamorph.stasis(predecessorCells[x][y].morphogen));
-                        }
-                     }
-                  }
-               }
-            }
-            for (x = 0; x < DIMENSIONS.width; x++)
-            {
-               for (y = 0; y < DIMENSIONS.height; y++)
-               {
-                  if (cells[x][y].type == Cell.EMPTY)
-                  {
-                     if (predecessorCells[x][y].type != Cell.EMPTY)
-                     {
-                        saveMetamorph(Metamorph.death(predecessorCells[x][y].morphogen));
-                     }
+                     saveMetamorph(predecessorCells[x][y].morphogen, cells[x][y]);
                   }
                }
             }
@@ -369,8 +294,10 @@ public class GameOfLife extends Organism
 
 
    // Save metamorph.
-   private void saveMetamorph(Metamorph metamorph) throws IOException
+   private void saveMetamorph(Morphogen morphogen, Cell cell) throws IOException
    {
+      Metamorph metamorph = new Metamorph(morphogen, cell);
+
       for (Metamorph m : metamorphs)
       {
          if (m.equals(metamorph))

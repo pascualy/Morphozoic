@@ -6,85 +6,81 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.Random;
+
+import morphozoic.Morphogen.Sphere;
 
 // Metamorph.
 public class Metamorph
 {
+   // Morphogen.
    public Morphogen morphogen;
 
-   public static enum Activity
-   {
-      DIVISION,
-      DEATH,
-      TYPE,
-      ORIENTATION,
-      STASIS;
-   }
-   public Activity    activity;
-   public Cell        cell;
-   public int         type;
-   public Orientation orientation;
+   // Target cell configuration.
+   public Cell[][] target;
+
+   // Hash code.
+   public int hashCode;
+
 
    // Constructors.
-   public Metamorph(Morphogen morphogen, Activity activity)
+   public Metamorph(Morphogen morphogen, Cell cell)
    {
       this.morphogen = morphogen;
-      this.activity  = activity;
+      target         = new Cell[Morphogen.SECTOR_DIMENSION][Morphogen.SECTOR_DIMENSION];
+      Cell[][] cells = cell.organism.cells;
+      int o  = Morphogen.SECTOR_DIMENSION / 2;
+      int cx = cell.x - o;
+      int cy = cell.y - o;
+      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+      {
+         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         {
+            int x2 = cx + x;
+            int y2 = cy + y;
+            target[x][y]   = cells[x2][y2].clone();
+            target[x][y].x = x - o;
+            target[x][y].y = y - o;
+         }
+      }
+      hashCode = getHashCode();
    }
 
 
-   public Metamorph(Morphogen morphogen, Activity activity, Cell cell)
+   public Metamorph(Morphogen morphogen, Cell[][] target)
    {
       this.morphogen = morphogen;
-      this.activity  = activity;
-      this.cell      = cell;
+      this.target    = target;
+      hashCode       = getHashCode();
    }
 
 
-   public Metamorph(Morphogen morphogen, Activity activity, int type)
+   // Get hash code.
+   public int getHashCode()
    {
-      this.morphogen = morphogen;
-      this.activity  = activity;
-      this.type      = type;
-   }
+      Random r = new Random(66);
 
-
-   public Metamorph(Morphogen morphogen, Activity activity, Orientation orientation)
-   {
-      this.morphogen   = morphogen;
-      this.activity    = activity;
-      this.orientation = orientation;
-   }
-
-
-   // Builders.
-   public static Metamorph division(Morphogen morphogen, Cell cell)
-   {
-      return(new Metamorph(morphogen, Activity.DIVISION, cell));
-   }
-
-
-   public static Metamorph death(Morphogen morphogen)
-   {
-      return(new Metamorph(morphogen, Activity.DEATH));
-   }
-
-
-   public static Metamorph type(Morphogen morphogen, int type)
-   {
-      return(new Metamorph(morphogen, Activity.TYPE, type));
-   }
-
-
-   public static Metamorph orientation(Morphogen morphogen, Orientation orientation)
-   {
-      return(new Metamorph(morphogen, Activity.ORIENTATION, orientation));
-   }
-
-
-   public static Metamorph stasis(Morphogen morphogen)
-   {
-      return(new Metamorph(morphogen, Activity.STASIS));
+      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+      {
+         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         {
+            int h = r.nextInt();
+            int t = target[x][y].type;
+            if (t != 0)
+            {
+               h = h ^ t;
+               r.setSeed(h);
+            }
+            h = r.nextInt();
+            int o = target[x][y].orientation.ordinal();
+            if (o != 0)
+            {
+               h = h ^ o;
+               r.setSeed(h);
+            }
+         }
+      }
+      return(r.nextInt());
    }
 
 
@@ -95,71 +91,31 @@ public class Metamorph
       {
          return(false);
       }
-      if (m.activity != activity)
+      if (m.hashCode != hashCode)
       {
+         // Conflicting metamorphs!
          return(false);
       }
-      switch (activity)
+      else
       {
-      case DIVISION:
-         if ((m.cell.x != cell.x) || (m.cell.y != cell.y) ||
-             (m.cell.type != cell.type) || (m.cell.orientation != cell.orientation))
-         {
-            return(false);
-         }
-         break;
-
-      case DEATH:
-         break;
-
-      case TYPE:
-         if (m.type != type)
-         {
-            return(false);
-         }
-         break;
-
-      case ORIENTATION:
-         if (m.orientation != orientation)
-         {
-            return(false);
-         }
-         break;
-
-      case STASIS:
-         break;
+         return(true);
       }
-      return(true);
    }
 
 
-   // Execute.
+   // Execute: overlay cell neighborhood with target cells.
    public void exec(Cell cell)
    {
-      switch (activity)
+      Cell[][] cells = cell.organism.cells;
+      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
       {
-      case DIVISION:
-         int x = cell.x + this.cell.x;
-         int y = cell.y + this.cell.y;
-         Cell[][] cells          = cell.organism.cells;
-         cells[x][y].type        = this.cell.type;
-         cells[x][y].orientation = this.cell.orientation;
-         break;
-
-      case DEATH:
-         cell.type = Cell.EMPTY;
-         break;
-
-      case TYPE:
-         cell.type = type;
-         break;
-
-      case ORIENTATION:
-         cell.orientation = orientation;
-         break;
-
-      case STASIS:
-         break;
+         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         {
+            int x2 = cell.x + target[x][y].x;
+            int y2 = cell.y + target[x][y].y;
+            cells[x2][y2].type        = target[x][y].type;
+            cells[x2][y2].orientation = target[x][y].orientation;
+         }
       }
    }
 
@@ -168,33 +124,13 @@ public class Metamorph
    public void save(DataOutputStream writer) throws IOException
    {
       morphogen.save(writer);
-      switch (activity)
+      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
       {
-      case DIVISION:
-         writer.writeInt(0);
-         writer.writeInt(cell.type);
-         writer.writeInt(cell.x);
-         writer.writeInt(cell.y);
-         writer.writeInt(cell.orientation.ordinal());
-         break;
-
-      case DEATH:
-         writer.writeInt(1);
-         break;
-
-      case TYPE:
-         writer.writeInt(2);
-         writer.writeInt(type);
-         break;
-
-      case ORIENTATION:
-         writer.writeInt(3);
-         writer.writeInt(orientation.ordinal());
-         break;
-
-      case STASIS:
-         writer.writeInt(4);
-         break;
+         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         {
+            writer.writeInt(target[x][y].type);
+            writer.writeInt(target[x][y].orientation.ordinal());
+         }
       }
    }
 
@@ -202,41 +138,25 @@ public class Metamorph
    // Load.
    public static Metamorph load(DataInputStream reader) throws IOException
    {
-      int t, o;
-
       try
       {
          Morphogen morphogen = Morphogen.load(reader);
-         int       a         = reader.readInt();
-         switch (a)
+         Cell[][] target = new Cell[Morphogen.SECTOR_DIMENSION][Morphogen.SECTOR_DIMENSION];
+         int d = Morphogen.SECTOR_DIMENSION / 2;
+         for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
          {
-         case 0:
-            t = reader.readInt();
-            int x = reader.readInt();
-            int y = reader.readInt();
-            o = reader.readInt();
-            Cell c = new Cell(t, x, y, Orientation.fromInt(o), null);
-            return(new Metamorph(morphogen, Activity.DIVISION, c));
-
-         case 1:
-            return(new Metamorph(morphogen, Activity.DEATH));
-
-         case 2:
-            t = reader.readInt();
-            return(new Metamorph(morphogen, Activity.TYPE, t));
-
-         case 3:
-            o = reader.readInt();
-            return(new Metamorph(morphogen, Activity.ORIENTATION, Orientation.fromInt(o)));
-
-         case 4:
-            return(new Metamorph(morphogen, Activity.STASIS));
+            for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+            {
+               int t = reader.readInt();
+               int o = reader.readInt();
+               target[x][y] = new Cell(t, x - d, y - d, Orientation.fromInt(o), null);
+            }
          }
+         return(new Metamorph(morphogen, target));
       }
       catch (EOFException e) {
          return(null);
       }
-      return(null);
    }
 
 
@@ -245,31 +165,21 @@ public class Metamorph
    {
       System.out.println("Metamorph:");
       morphogen.print();
-      System.out.print("  Activity: " + activity);
-      switch (activity)
+      System.out.println("  Target:");
+      for (int y = Morphogen.SECTOR_DIMENSION - 1; y >= 0; y--)
       {
-      case DIVISION:
-         System.out.print(" cell.type=" + cell.type);
-         System.out.print(" cell.x=" + cell.x);
-         System.out.print(" cell.y=" + cell.y);
-         System.out.println(" cell.orientation=" + cell.orientation);
-         break;
-
-      case DEATH:
+         for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+         {
+            if (target[x][y].type == Cell.EMPTY)
+            {
+               System.out.print("\tx");
+            }
+            else
+            {
+               System.out.print("\t" + target[x][y].type);
+            }
+         }
          System.out.println();
-         break;
-
-      case TYPE:
-         System.out.println(" type=" + type);
-         break;
-
-      case ORIENTATION:
-         System.out.println(" orientation=" + orientation);
-         break;
-
-      case STASIS:
-         System.out.println();
-         break;
       }
    }
 }
