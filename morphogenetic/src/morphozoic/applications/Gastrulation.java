@@ -13,7 +13,6 @@ import morphozoic.Cell;
 import morphozoic.Metamorph;
 import morphozoic.Morphogen;
 import morphozoic.Organism;
-import morphozoic.Organism.MetamorphDistance;
 
 // Gastrulation.
 public class Gastrulation extends Organism

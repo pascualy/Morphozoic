@@ -8,8 +8,6 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.Random;
 
-import morphozoic.Morphogen.Sphere;
-
 // Metamorph.
 public class Metamorph
 {

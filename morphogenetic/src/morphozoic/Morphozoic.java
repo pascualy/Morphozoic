@@ -30,7 +30,6 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.Constructor;
-import java.util.Random;
 import java.util.Vector;
 
 import javax.swing.*;
@@ -69,6 +68,7 @@ public class Morphozoic extends JFrame implements Runnable
    // Threads.
    Thread updateThread;
    Thread displayThread;
+   Object lock = new Object();
 
    // Control panel.
    Panel     controlPanel;
@@ -180,7 +180,7 @@ public class Morphozoic extends JFrame implements Runnable
       {
          if ((updateDelay < MAX_UPDATE_DELAY) || stepButton.getState())
          {
-            synchronized (this)
+            synchronized (lock)
             {
                organism.update();
             }
@@ -206,7 +206,7 @@ public class Morphozoic extends JFrame implements Runnable
       while (Thread.currentThread() == displayThread &&
              !displayThread.isInterrupted())
       {
-         synchronized (this)
+         synchronized (lock)
          {
             updateDisplay();
          }
@@ -342,73 +342,76 @@ public class Morphozoic extends JFrame implements Runnable
 
          if ((x >= 0) && (x < displaySize.width) && (y >= 0) && (y < displaySize.height))
          {
-            if (displayField)
+            synchronized (lock)
             {
-               int              w            = organism.DIMENSIONS.width;
-               int              h            = organism.DIMENSIONS.height;
-               Morphogen.Sphere sphere       = displayFieldCell.morphogen.getSphere(displayFieldSphere);
-               boolean          selectSector = false;
-               int              n            = Morphogen.SECTOR_DIMENSION * Morphogen.SECTOR_DIMENSION;
-               for (int i = 0; i < n; i++)
+               if (displayField)
                {
-                  Morphogen.Sphere.Sector sector = sphere.getSector(i);
-                  int xmin = sector.dx + displayFieldCell.x;
-                  while (xmin < 0) { xmin += w; }
-                  while (xmin >= w) { xmin -= w; }
-                  int ymin = sector.dy + displayFieldCell.y;
-                  while (ymin < 0) { ymin += h; }
-                  while (ymin >= h) { ymin -= h; }
-                  int xmax = xmin + sector.d - 1;
-                  int ymax = ymin + sector.d - 1;
-                  if ((x >= xmin) && (x <= xmax) && (y >= ymin) && (y <= ymax))
+                  int              w            = organism.DIMENSIONS.width;
+                  int              h            = organism.DIMENSIONS.height;
+                  Morphogen.Sphere sphere       = displayFieldCell.morphogen.getSphere(displayFieldSphere);
+                  boolean          selectSector = false;
+                  int              n            = Morphogen.SECTOR_DIMENSION * Morphogen.SECTOR_DIMENSION;
+                  for (int i = 0; i < n; i++)
                   {
-                     selectSector = true;
-                     try
+                     Morphogen.Sphere.Sector sector = sphere.getSector(i);
+                     int xmin = sector.dx + displayFieldCell.x;
+                     while (xmin < 0) { xmin += w; }
+                     while (xmin >= w) { xmin -= w; }
+                     int ymin = sector.dy + displayFieldCell.y;
+                     while (ymin < 0) { ymin += h; }
+                     while (ymin >= h) { ymin -= h; }
+                     int xmax = xmin + sector.d - 1;
+                     int ymax = ymin + sector.d - 1;
+                     if ((x >= xmin) && (x <= xmax) && (y >= ymin) && (y <= ymax))
                      {
-                        displayFieldProlong = true;
-                        new TypeDensityDisplay("Type densities: sphere=" + displayFieldSphere + " sector=" + i,
-                                               sector, organism.randomizer);
+                        selectSector = true;
+                        try
+                        {
+                           displayFieldProlong = true;
+                           new TypeDensityDisplay("Type densities: sphere=" + displayFieldSphere + " sector=" + i,
+                                                  sector, organism.randomizer);
+                        }
+                        catch (Exception ex)
+                        {
+                           System.err.println("Cannot create type density display");
+                        }
+                        break;
                      }
-                     catch (Exception ex)
+                  }
+                  if (!selectSector)
+                  {
+                     if (displayFieldProlong)
                      {
-                        System.err.println("Cannot create type density display");
+                        displayFieldProlong = false;
                      }
-                     break;
-                  }
-               }
-               if (!selectSector)
-               {
-                  if (displayFieldProlong)
-                  {
-                     displayFieldProlong = false;
-                  }
-                  else
-                  {
-                     displayField = false;
-                  }
-               }
-            }
-            else
-            {
-               if (organism.isEditable)
-               {
-                  if (organism.cells[x][y].type == Cell.EMPTY)
-                  {
-                     organism.cells[x][y].type = 0;
-                  }
-                  else
-                  {
-                     organism.cells[x][y].type = Cell.EMPTY;
+                     else
+                     {
+                        displayField = false;
+                     }
                   }
                }
                else
                {
-                  if (organism.cells[x][y].type != Cell.EMPTY)
+                  if (organism.isEditable)
                   {
-                     displayFieldCell = organism.cells[x][y].clone();
-                     displayFieldCell.generateMorphogen();
-                     displayFieldSphere = 0;
-                     displayField       = true;
+                     if (organism.cells[x][y].type == Cell.EMPTY)
+                     {
+                        organism.cells[x][y].type = 0;
+                     }
+                     else
+                     {
+                        organism.cells[x][y].type = Cell.EMPTY;
+                     }
+                  }
+                  else
+                  {
+                     if (organism.cells[x][y].type != Cell.EMPTY)
+                     {
+                        displayFieldCell = organism.cells[x][y].clone();
+                        displayFieldCell.generateMorphogen();
+                        displayFieldSphere = 0;
+                        displayField       = true;
+                     }
                   }
                }
             }
@@ -434,15 +437,18 @@ public class Morphozoic extends JFrame implements Runnable
       @Override
       public void keyTyped(KeyEvent e)
       {
-         if (displayField)
+         synchronized (lock)
          {
-            if (e.getKeyChar() == ' ')
+            if (displayField)
             {
-               displayFieldSphere = (displayFieldSphere + 1) % Morphogen.NUM_SPHERES;
-            }
-            else
-            {
-               displayField = false;
+               if (e.getKeyChar() == ' ')
+               {
+                  displayFieldSphere = (displayFieldSphere + 1) % Morphogen.NUM_SPHERES;
+               }
+               else
+               {
+                  displayField = false;
+               }
             }
          }
       }
