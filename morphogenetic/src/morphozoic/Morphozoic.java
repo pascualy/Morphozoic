@@ -37,6 +37,8 @@ import javax.swing.event.*;
 
 public class Morphozoic extends JFrame implements Runnable
 {
+   private static final long serialVersionUID = 1L;
+
    // Organism.
    String   organismName;
    Organism organism;
@@ -526,7 +528,7 @@ public class Morphozoic extends JFrame implements Runnable
       }
       try
       {
-         Morphozoic morphozoic = new Morphozoic(organismName, organismArgs, randomSeed);
+         new Morphozoic(organismName, organismArgs, randomSeed);
       }
       catch (Exception e) {
          System.err.println(e.getMessage());

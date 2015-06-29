@@ -17,6 +17,9 @@ import java.util.Vector;
  */
 public class Morphogen
 {
+   // Source cell configuration.
+   public Cell[][] sourceCells;
+
    // Spheres.
    public static final int DEFAULT_NUM_SPHERES = 3;
    public static int       NUM_SPHERES         = DEFAULT_NUM_SPHERES;
@@ -85,6 +88,30 @@ public class Morphogen
    // Constructors.
    public Morphogen(Cell cell)
    {
+      // Create source cell configuration.
+      sourceCells    = new Cell[Morphogen.SECTOR_DIMENSION][Morphogen.SECTOR_DIMENSION];
+      Cell[][] cells = cell.organism.cells;
+      int w  = cell.organism.DIMENSIONS.width;
+      int h  = cell.organism.DIMENSIONS.height;
+      int o  = Morphogen.SECTOR_DIMENSION / 2;
+      int cx = cell.x - o;
+      int cy = cell.y - o;
+      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+      {
+         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         {
+            int x2 = cx + x;
+            int y2 = cy + y;
+            while (x2 < 0) { x2 += w; }
+            while (x2 >= w) { x2 -= w; }
+            while (y2 < 0) { y2 += h; }
+            while (y2 >= h) { y2 -= h; }
+            sourceCells[x][y]   = cells[x2][y2].clone();
+            sourceCells[x][y].x = x - o;
+            sourceCells[x][y].y = y - o;
+         }
+      }
+
       // Create spheres.
       spheres = new Vector<Sphere>();
       for (int i = 0; i < NUM_SPHERES; i++)
@@ -99,8 +126,9 @@ public class Morphogen
 
    public Morphogen()
    {
-      spheres  = new Vector<Sphere>();
-      hashCode = 0;
+      sourceCells = null;
+      spheres     = null;
+      hashCode    = 0;
    }
 
 
@@ -229,6 +257,14 @@ public class Morphogen
    // Save.
    public void save(DataOutputStream writer) throws IOException
    {
+      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+      {
+         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         {
+            writer.writeInt(sourceCells[x][y].type);
+            writer.writeInt(sourceCells[x][y].orientation.ordinal());
+         }
+      }
       for (Sphere s : spheres)
       {
          for (int i = 0; i < s.sectors.length; i++)
@@ -253,16 +289,28 @@ public class Morphogen
    {
       Morphogen m = new Morphogen();
 
+      m.sourceCells = new Cell[Morphogen.SECTOR_DIMENSION][Morphogen.SECTOR_DIMENSION];
+      int d = Morphogen.SECTOR_DIMENSION / 2;
+      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+      {
+         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         {
+            int t = reader.readInt();
+            int o = reader.readInt();
+            m.sourceCells[x][y] = new Cell(t, x - d, y - d, Orientation.fromInt(o), null);
+         }
+      }
+      m.spheres = new Vector<Sphere>();
       for (int i = 0; i < NUM_SPHERES; i++)
       {
          Sphere s = m.new Sphere();
          m.spheres.add(s);
          for (int j = 0; j < s.sectors.length; j++)
          {
-            int           dx = reader.readInt();
-            int           dy = reader.readInt();
-            int           d  = reader.readInt();
-            Sphere.Sector t  = s.new Sector(dx, dy, d);
+            int dx = reader.readInt();
+            int dy = reader.readInt();
+            d = reader.readInt();
+            Sphere.Sector t = s.new Sector(dx, dy, d);
             for (int k = 0; k < Cell.NUM_TYPES; k++)
             {
                t.setTypeDensity(k, reader.readFloat());
@@ -279,7 +327,22 @@ public class Morphogen
    public void print()
    {
       System.out.println("Morphogen:");
-      printNeighborhood();
+      System.out.println("  Source cells:");
+      for (int y = Morphogen.SECTOR_DIMENSION - 1; y >= 0; y--)
+      {
+         for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+         {
+            if (sourceCells[x][y].type == Cell.EMPTY)
+            {
+               System.out.print("\tx");
+            }
+            else
+            {
+               System.out.print("\t" + sourceCells[x][y].type);
+            }
+         }
+         System.out.println();
+      }
       System.out.println("  Spheres:");
       for (int s = 0; s < spheres.size(); s++)
       {
@@ -300,48 +363,5 @@ public class Morphogen
          }
       }
       System.out.println("  Hash code=" + hashCode);
-   }
-
-
-   // Print neighborhood cells.
-   public void printNeighborhood()
-   {
-      System.out.println("  Neighborhood cells:");
-      int    types[][] = new int[SECTOR_DIMENSION][SECTOR_DIMENSION];
-      Sphere sphere    = spheres.get(0);
-      for (int i = 0, x = 0, y = 0; i < sphere.sectors.length; i++)
-      {
-         Sphere.Sector t = sphere.sectors[i];
-         types[x][y] = Cell.EMPTY;
-         for (int j = 0; j < t.typeDensities.length; j++)
-         {
-            if (t.typeDensities[j] > 0.0f)
-            {
-               types[x][y] = j;
-               break;
-            }
-         }
-         x++;
-         if (x == SECTOR_DIMENSION)
-         {
-            x = 0;
-            y++;
-         }
-      }
-      for (int y = SECTOR_DIMENSION - 1; y >= 0; y--)
-      {
-         for (int x = 0; x < SECTOR_DIMENSION; x++)
-         {
-            if (types[x][y] == Cell.EMPTY)
-            {
-               System.out.print("\tx");
-            }
-            else
-            {
-               System.out.print("\t" + types[x][y]);
-            }
-         }
-         System.out.println();
-      }
    }
 }

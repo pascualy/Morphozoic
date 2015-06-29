@@ -11,6 +11,8 @@ import javax.swing.*;
 
 public class TypeDensityDisplay extends JFrame implements Runnable, WindowListener
 {
+   private static final long serialVersionUID = 1L;
+
    // Morphogenetic field sphere sector.
    Morphogen.Sphere.Sector sector;
 

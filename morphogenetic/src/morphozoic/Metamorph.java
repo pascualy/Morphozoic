@@ -15,17 +15,16 @@ public class Metamorph
    public Morphogen morphogen;
 
    // Target cell configuration.
-   public Cell[][] target;
+   public Cell[][] targetCells;
 
    // Hash code.
    public int hashCode;
-
 
    // Constructors.
    public Metamorph(Morphogen morphogen, Cell cell)
    {
       this.morphogen = morphogen;
-      target         = new Cell[Morphogen.SECTOR_DIMENSION][Morphogen.SECTOR_DIMENSION];
+      targetCells    = new Cell[Morphogen.SECTOR_DIMENSION][Morphogen.SECTOR_DIMENSION];
       Cell[][] cells = cell.organism.cells;
       int o  = Morphogen.SECTOR_DIMENSION / 2;
       int cx = cell.x - o;
@@ -36,20 +35,20 @@ public class Metamorph
          {
             int x2 = cx + x;
             int y2 = cy + y;
-            target[x][y]   = cells[x2][y2].clone();
-            target[x][y].x = x - o;
-            target[x][y].y = y - o;
+            targetCells[x][y]   = cells[x2][y2].clone();
+            targetCells[x][y].x = x - o;
+            targetCells[x][y].y = y - o;
          }
       }
       hashCode = getHashCode();
    }
 
 
-   public Metamorph(Morphogen morphogen, Cell[][] target)
+   public Metamorph(Morphogen morphogen, Cell[][] targetCells)
    {
-      this.morphogen = morphogen;
-      this.target    = target;
-      hashCode       = getHashCode();
+      this.morphogen   = morphogen;
+      this.targetCells = targetCells;
+      hashCode         = getHashCode();
    }
 
 
@@ -63,14 +62,14 @@ public class Metamorph
          for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
          {
             int h = r.nextInt();
-            int t = target[x][y].type;
+            int t = targetCells[x][y].type;
             if (t != 0)
             {
                h = h ^ t;
                r.setSeed(h);
             }
             h = r.nextInt();
-            int o = target[x][y].orientation.ordinal();
+            int o = targetCells[x][y].orientation.ordinal();
             if (o != 0)
             {
                h = h ^ o;
@@ -105,14 +104,20 @@ public class Metamorph
    public void exec(Cell cell)
    {
       Cell[][] cells = cell.organism.cells;
+      int w = cell.organism.DIMENSIONS.width;
+      int h = cell.organism.DIMENSIONS.height;
       for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
       {
          for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
          {
-            int x2 = cell.x + target[x][y].x;
-            int y2 = cell.y + target[x][y].y;
-            cells[x2][y2].type        = target[x][y].type;
-            cells[x2][y2].orientation = target[x][y].orientation;
+            int x2 = cell.x + targetCells[x][y].x;
+            int y2 = cell.y + targetCells[x][y].y;
+            while (x2 < 0) { x2 += w; }
+            while (x2 >= w) { x2 -= w; }
+            while (y2 < 0) { y2 += h; }
+            while (y2 >= h) { y2 -= h; }
+            cells[x2][y2].type        = targetCells[x][y].type;
+            cells[x2][y2].orientation = targetCells[x][y].orientation;
          }
       }
    }
@@ -126,8 +131,8 @@ public class Metamorph
       {
          for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
          {
-            writer.writeInt(target[x][y].type);
-            writer.writeInt(target[x][y].orientation.ordinal());
+            writer.writeInt(targetCells[x][y].type);
+            writer.writeInt(targetCells[x][y].orientation.ordinal());
          }
       }
    }
@@ -139,7 +144,7 @@ public class Metamorph
       try
       {
          Morphogen morphogen = Morphogen.load(reader);
-         Cell[][] target = new Cell[Morphogen.SECTOR_DIMENSION][Morphogen.SECTOR_DIMENSION];
+         Cell[][] targetCells = new Cell[Morphogen.SECTOR_DIMENSION][Morphogen.SECTOR_DIMENSION];
          int d = Morphogen.SECTOR_DIMENSION / 2;
          for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
          {
@@ -147,10 +152,10 @@ public class Metamorph
             {
                int t = reader.readInt();
                int o = reader.readInt();
-               target[x][y] = new Cell(t, x - d, y - d, Orientation.fromInt(o), null);
+               targetCells[x][y] = new Cell(t, x - d, y - d, Orientation.fromInt(o), null);
             }
          }
-         return(new Metamorph(morphogen, target));
+         return(new Metamorph(morphogen, targetCells));
       }
       catch (EOFException e) {
          return(null);
@@ -163,18 +168,18 @@ public class Metamorph
    {
       System.out.println("Metamorph:");
       morphogen.print();
-      System.out.println("  Target:");
+      System.out.println("  Target cells:");
       for (int y = Morphogen.SECTOR_DIMENSION - 1; y >= 0; y--)
       {
          for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
          {
-            if (target[x][y].type == Cell.EMPTY)
+            if (targetCells[x][y].type == Cell.EMPTY)
             {
                System.out.print("\tx");
             }
             else
             {
-               System.out.print("\t" + target[x][y].type);
+               System.out.print("\t" + targetCells[x][y].type);
             }
          }
          System.out.println();

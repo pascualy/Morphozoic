@@ -8,7 +8,7 @@ import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Vector;
+import java.util.Random;
 
 import morphozoic.Cell;
 import morphozoic.Metamorph;
@@ -18,23 +18,19 @@ import morphozoic.Organism;
 // Game of Life.
 public class GameOfLife extends Organism
 {
-   // Metamorphs.
-   public Vector<Metamorph> metamorphs;
-
-   // Predecessor cells.
-   public Cell[][] predecessorCells;
+   public static final String ORGANISM_NAME = "morphozoic.applications.GameOfLife";
 
    // Options.
    public static final String OPTIONS = "\n\t[-genMetamorphs <save file name>]\n\t[-execMetamorphs <load file name>]";
 
-   // Metamorph data streams.
-   private DataOutputStream writer;
-   private DataInputStream  reader;
-
    // Constructor.
    public GameOfLife(String[] args, Integer randomSeed) throws IllegalArgumentException, IOException
    {
-      String usage = "Usage: java morphozoic.Morphozoic\n\t[-organism morphozoic.applications.GameOfLife]" + morphozoic.Morphozoic.OPTIONS + OPTIONS;
+      String usage = "Usage: java morphozoic.Morphozoic\n\t[-organism " + ORGANISM_NAME + "]" + morphozoic.Morphozoic.OPTIONS + OPTIONS;
+
+      // Random numbers.
+      this.randomSeed = randomSeed;
+      randomizer      = new Random(randomSeed);
 
       // Get arguments.
       for (int i = 0; i < args.length; i++)
@@ -57,14 +53,11 @@ public class GameOfLife extends Organism
       }
       if ((genFilename != null) && (execFilename != null))
       {
-         System.err.println("Mutually exclusive arguments: -genMetamorphs and -execMetamorphs");
+         System.err.println("Mutually exclusive options: -genMetamorphs and -execMetamorphs");
          System.err.println(usage);
          throw new IllegalArgumentException(usage);
       }
-      tick             = 0;
-      isEditable       = true;
-      metamorphs       = new Vector<Metamorph>();
-      predecessorCells = new Cell[DIMENSIONS.width][DIMENSIONS.height];
+      isEditable = true;
       if (genFilename != null)
       {
          try
@@ -151,36 +144,17 @@ public class GameOfLife extends Organism
    @Override
    public void update()
    {
-      int x, y;
-
-      // Generate morphogenetic fields.
-      for (x = 0; x < DIMENSIONS.width; x++)
-      {
-         for (y = 0; y < DIMENSIONS.height; y++)
-         {
-            cells[x][y].generateMorphogen();
-         }
-      }
-
-      // Create predecessor cells.
-      for (x = 0; x < DIMENSIONS.width; x++)
-      {
-         for (y = 0; y < DIMENSIONS.height; y++)
-         {
-            predecessorCells[x][y]           = cells[x][y].clone();
-            predecessorCells[x][y].morphogen = cells[x][y].morphogen;
-            cells[x][y].morphogen            = null;
-         }
-      }
+      // Initialize update.
+      initUpdate();
 
       // Save initial cell types?
       if ((tick == 0) && (genFilename != null))
       {
          try
          {
-            for (x = 0; x < DIMENSIONS.width; x++)
+            for (int x = 0; x < DIMENSIONS.width; x++)
             {
-               for (y = 0; y < DIMENSIONS.height; y++)
+               for (int y = 0; y < DIMENSIONS.height; y++)
                {
                   if (predecessorCells[x][y].type != Cell.EMPTY)
                   {
@@ -206,61 +180,8 @@ public class GameOfLife extends Organism
       }
       else
       {
-         // Match metamorphs to cell morphogens.
-         MetamorphDistance cellMorphs[][] = new MetamorphDistance[DIMENSIONS.width][DIMENSIONS.height];
-         for (x = 0; x < DIMENSIONS.width; x++)
-         {
-            for (y = 0; y < DIMENSIONS.height; y++)
-            {
-               if (predecessorCells[x][y].type != Cell.EMPTY)
-               {
-                  float dist = 0.0f;
-                  for (Metamorph m : metamorphs)
-                  {
-                     float d = predecessorCells[x][y].morphogen.compare(m.morphogen);
-                     if ((cellMorphs[x][y] == null) || (d < dist))
-                     {
-                        cellMorphs[x][y] = new MetamorphDistance(d, m);
-                        dist             = d;
-                     }
-                  }
-               }
-            }
-         }
-
-         // Execute metamorphs by descending morphogen distance.
-         boolean exec = true;
-         while (exec)
-         {
-            exec = false;
-            float     dist  = -1.0f;
-            Metamorph morph = null;
-            int       cx    = 0;
-            int       cy    = 0;
-            for (x = 0; x < DIMENSIONS.width; x++)
-            {
-               for (y = 0; y < DIMENSIONS.height; y++)
-               {
-                  MetamorphDistance m = cellMorphs[x][y];
-                  if (m != null)
-                  {
-                     if ((dist < 0.0f) || (m.morphogenDistance > dist))
-                     {
-                        dist  = m.morphogenDistance;
-                        morph = m.metamorph;
-                        cx    = x;
-                        cy    = y;
-                     }
-                  }
-               }
-            }
-            if (morph != null)
-            {
-               morph.exec(cells[cx][cy]);
-               cellMorphs[cx][cy] = null;
-               exec = true;
-            }
-         }
+         // Execute metamorphs.
+         execMetamorphs();
       }
       tick++;
       if (genFilename != null)
@@ -268,44 +189,11 @@ public class GameOfLife extends Organism
          isEditable = false;
       }
 
-      // Create metamorphs that produce the updated organism.
+      // Generate metamorphs that produce the updated organism.
       if (genFilename != null)
       {
-         try
-         {
-            for (x = 0; x < DIMENSIONS.width; x++)
-            {
-               for (y = 0; y < DIMENSIONS.height; y++)
-               {
-                  if (predecessorCells[x][y].type != Cell.EMPTY)
-                  {
-                     saveMetamorph(predecessorCells[x][y].morphogen, cells[x][y]);
-                  }
-               }
-            }
-         }
-         catch (IOException e)
-         {
-            System.err.println("Cannot save metamorphs to " + genFilename + ":" + e.getMessage());
-         }
+         saveMetamorphs();
       }
-   }
-
-
-   // Save metamorph.
-   private void saveMetamorph(Morphogen morphogen, Cell cell) throws IOException
-   {
-      Metamorph metamorph = new Metamorph(morphogen, cell);
-
-      for (Metamorph m : metamorphs)
-      {
-         if (m.equals(metamorph))
-         {
-            return;
-         }
-      }
-      metamorphs.add(metamorph);
-      metamorph.save(writer);
    }
 
 
