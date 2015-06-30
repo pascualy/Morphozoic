@@ -87,7 +87,7 @@ public class Morphozoic extends JFrame implements Runnable
    int         fontHeight;
 
    // Options.
-   public static final String OPTIONS = "\n\t[-numCellTypes <number of cell types>]\n\t[-numSpheres <number of morphogenetic spheres>]\n\t[-sectorDimension <sphere sector dimension>]\n\t[-randomSeed <random seed>]";
+   public static final String OPTIONS = "\n\t[-numCellTypes <number of cell types>]\n\t[-neighborhoodDimension <cell neighborhood dimension>]\n\t[-numSpheres <number of morphogenetic spheres>]\n\t[-randomSeed <random seed>]";
 
    // Constructor.
    public Morphozoic(String organismName, String[] organismArgs,
@@ -240,7 +240,7 @@ public class Morphozoic extends JFrame implements Runnable
          if (displayField)
          {
             Morphogen.Sphere sphere = displayFieldCell.morphogen.getSphere(displayFieldSphere);
-            int              n      = Morphogen.SECTOR_DIMENSION * Morphogen.SECTOR_DIMENSION;
+            int              n      = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
             for (int i = 0; i < n; i++)
             {
                Morphogen.Sphere.Sector sector = sphere.getSector(i);
@@ -352,7 +352,7 @@ public class Morphozoic extends JFrame implements Runnable
                   int              h            = organism.DIMENSIONS.height;
                   Morphogen.Sphere sphere       = displayFieldCell.morphogen.getSphere(displayFieldSphere);
                   boolean          selectSector = false;
-                  int              n            = Morphogen.SECTOR_DIMENSION * Morphogen.SECTOR_DIMENSION;
+                  int              n            = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
                   for (int i = 0; i < n; i++)
                   {
                      Morphogen.Sphere.Sector sector = sphere.getSector(i);
@@ -483,6 +483,17 @@ public class Morphozoic extends JFrame implements Runnable
                return;
             }
          }
+         else if (args[i].equals("-neighborhoodDimension"))
+         {
+            i++;
+            Morphogen.NEIGHBORHOOD_DIMENSION = Integer.parseInt(args[i]);
+            if ((Morphogen.NEIGHBORHOOD_DIMENSION <= 0) || ((Morphogen.NEIGHBORHOOD_DIMENSION % 2) != 1))
+            {
+               System.err.println("Neighborhood dimension must be positive odd number");
+               System.err.println(usage);
+               return;
+            }
+         }
          else if (args[i].equals("-numSpheres"))
          {
             i++;
@@ -490,17 +501,6 @@ public class Morphozoic extends JFrame implements Runnable
             if (Morphogen.NUM_SPHERES <= 0)
             {
                System.err.println("Number of spheres must be positive");
-               System.err.println(usage);
-               return;
-            }
-         }
-         else if (args[i].equals("-sectorDimension"))
-         {
-            i++;
-            Morphogen.SECTOR_DIMENSION = Integer.parseInt(args[i]);
-            if ((Morphogen.SECTOR_DIMENSION <= 0) || ((Morphogen.SECTOR_DIMENSION % 2) != 1))
-            {
-               System.err.println("Sector dimension must be positive odd number");
                System.err.println(usage);
                return;
             }

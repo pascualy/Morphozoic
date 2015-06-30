@@ -24,14 +24,14 @@ public class Metamorph
    public Metamorph(Morphogen morphogen, Cell cell)
    {
       this.morphogen = morphogen;
-      targetCells    = new Cell[Morphogen.SECTOR_DIMENSION][Morphogen.SECTOR_DIMENSION];
+      targetCells    = new Cell[Morphogen.NEIGHBORHOOD_DIMENSION][Morphogen.NEIGHBORHOOD_DIMENSION];
       Cell[][] cells = cell.organism.cells;
-      int o  = Morphogen.SECTOR_DIMENSION / 2;
+      int o  = Morphogen.NEIGHBORHOOD_DIMENSION / 2;
       int cx = cell.x - o;
       int cy = cell.y - o;
-      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+      for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
       {
-         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
          {
             int x2 = cx + x;
             int y2 = cy + y;
@@ -57,9 +57,9 @@ public class Metamorph
    {
       Random r = new Random(66);
 
-      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+      for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
       {
-         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
          {
             int h = r.nextInt();
             int t = targetCells[x][y].type;
@@ -106,9 +106,9 @@ public class Metamorph
       Cell[][] cells = cell.organism.cells;
       int w = cell.organism.DIMENSIONS.width;
       int h = cell.organism.DIMENSIONS.height;
-      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+      for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
       {
-         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
          {
             int x2 = cell.x + targetCells[x][y].x;
             int y2 = cell.y + targetCells[x][y].y;
@@ -127,9 +127,9 @@ public class Metamorph
    public void save(DataOutputStream writer) throws IOException
    {
       morphogen.save(writer);
-      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+      for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
       {
-         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
          {
             writer.writeInt(targetCells[x][y].type);
             writer.writeInt(targetCells[x][y].orientation.ordinal());
@@ -144,11 +144,11 @@ public class Metamorph
       try
       {
          Morphogen morphogen = Morphogen.load(reader);
-         Cell[][] targetCells = new Cell[Morphogen.SECTOR_DIMENSION][Morphogen.SECTOR_DIMENSION];
-         int d = Morphogen.SECTOR_DIMENSION / 2;
-         for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+         Cell[][] targetCells = new Cell[Morphogen.NEIGHBORHOOD_DIMENSION][Morphogen.NEIGHBORHOOD_DIMENSION];
+         int d = Morphogen.NEIGHBORHOOD_DIMENSION / 2;
+         for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
          {
-            for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+            for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
             {
                int t = reader.readInt();
                int o = reader.readInt();
@@ -169,9 +169,9 @@ public class Metamorph
       System.out.println("Metamorph:");
       morphogen.print();
       System.out.println("  Target cells:");
-      for (int y = Morphogen.SECTOR_DIMENSION - 1; y >= 0; y--)
+      for (int y = Morphogen.NEIGHBORHOOD_DIMENSION - 1; y >= 0; y--)
       {
-         for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+         for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
          {
             if (targetCells[x][y].type == Cell.EMPTY)
             {

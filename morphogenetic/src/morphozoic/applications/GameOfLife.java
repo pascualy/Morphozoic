@@ -64,8 +64,8 @@ public class GameOfLife extends Organism
          {
             writer = new DataOutputStream(new FileOutputStream(genFilename));
             writer.writeInt(Cell.NUM_TYPES);
+            writer.writeInt(Morphogen.NEIGHBORHOOD_DIMENSION);
             writer.writeInt(Morphogen.NUM_SPHERES);
-            writer.writeInt(Morphogen.SECTOR_DIMENSION);
             writer.flush();
          }
          catch (Exception e)
@@ -87,16 +87,16 @@ public class GameOfLife extends Organism
                                      " must equal cell numTypes (" + Cell.NUM_TYPES + ")");
             }
             n = reader.readInt();
+            if (n != Morphogen.NEIGHBORHOOD_DIMENSION)
+            {
+               throw new IOException("Morphogen neighborhoodDimension (" + n + ") in file " + execFilename +
+                                     " must equal neighborhoodDimension (" + Morphogen.NEIGHBORHOOD_DIMENSION + ")");
+            }
+            n = reader.readInt();
             if (n != Morphogen.NUM_SPHERES)
             {
                throw new IOException("Morphogen numSpheres (" + n + ") in file " + execFilename +
                                      " must equal numSpheres (" + Morphogen.NUM_SPHERES + ")");
-            }
-            n = reader.readInt();
-            if (n != Morphogen.SECTOR_DIMENSION)
-            {
-               throw new IOException("Morphogen sectorDimension (" + n + ") in file " + execFilename +
-                                     " must equal sectorDimension (" + Morphogen.SECTOR_DIMENSION + ")");
             }
             int     x, y;
             boolean eof = false;

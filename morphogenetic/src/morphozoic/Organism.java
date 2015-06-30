@@ -235,9 +235,9 @@ public class Organism
          if (morph != null)
          {
             Morphogen morphogen = morph.morphogen;
-            for (x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+            for (x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
             {
-               for (y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+               for (y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
                {
                   x2 = cx + morphogen.sourceCells[x][y].x;
                   y2 = cy + morphogen.sourceCells[x][y].y;

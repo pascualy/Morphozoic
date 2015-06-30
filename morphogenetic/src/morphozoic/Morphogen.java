@@ -25,9 +25,9 @@ public class Morphogen
    public static int       NUM_SPHERES         = DEFAULT_NUM_SPHERES;
    public Vector<Sphere>   spheres;
 
-   // Sphere sector dimension: odd number.
-   public static final int DEFAULT_SECTOR_DIMENSION = 3;
-   public static int       SECTOR_DIMENSION         = DEFAULT_SECTOR_DIMENSION;
+   // Sphere neighborhood dimension: odd number.
+   public static final int DEFAULT_NEIGHBORHOOD_DIMENSION = 3;
+   public static int       NEIGHBORHOOD_DIMENSION         = DEFAULT_NEIGHBORHOOD_DIMENSION;
 
    // Sphere.
    public class Sphere
@@ -63,7 +63,7 @@ public class Morphogen
 
       public Sphere()
       {
-         sectors = new Sector[SECTOR_DIMENSION * SECTOR_DIMENSION];
+         sectors = new Sector[NEIGHBORHOOD_DIMENSION * NEIGHBORHOOD_DIMENSION];
       }
 
 
@@ -89,16 +89,16 @@ public class Morphogen
    public Morphogen(Cell cell)
    {
       // Create source cell configuration.
-      sourceCells    = new Cell[Morphogen.SECTOR_DIMENSION][Morphogen.SECTOR_DIMENSION];
+      sourceCells    = new Cell[Morphogen.NEIGHBORHOOD_DIMENSION][Morphogen.NEIGHBORHOOD_DIMENSION];
       Cell[][] cells = cell.organism.cells;
       int w  = cell.organism.DIMENSIONS.width;
       int h  = cell.organism.DIMENSIONS.height;
-      int o  = Morphogen.SECTOR_DIMENSION / 2;
+      int o  = Morphogen.NEIGHBORHOOD_DIMENSION / 2;
       int cx = cell.x - o;
       int cy = cell.y - o;
-      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+      for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
       {
-         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
          {
             int x2 = cx + x;
             int y2 = cy + y;
@@ -140,14 +140,14 @@ public class Morphogen
       Cell[][] cells = cell.organism.cells;
       int   w  = cell.organism.DIMENSIONS.width;
       int   h  = cell.organism.DIMENSIONS.height;
-      int   d  = (int)Math.pow((double)SECTOR_DIMENSION, (double)sphereNum);
+      int   d  = (int)Math.pow((double)NEIGHBORHOOD_DIMENSION, (double)sphereNum);
       float d2 = (float)(d * d);
-      int   o  = (d * SECTOR_DIMENSION) / 2;
+      int   o  = (d * NEIGHBORHOOD_DIMENSION) / 2;
       int   x  = cell.x - o;
       int   y  = cell.y - o;
-      for (int y1 = 0, b = 0; y1 < SECTOR_DIMENSION; y1++)
+      for (int y1 = 0, b = 0; y1 < NEIGHBORHOOD_DIMENSION; y1++)
       {
-         for (int x1 = 0; x1 < SECTOR_DIMENSION; x1++)
+         for (int x1 = 0; x1 < NEIGHBORHOOD_DIMENSION; x1++)
          {
             int x2  = x + (x1 * d);
             int y2  = y + (y1 * d);
@@ -257,9 +257,9 @@ public class Morphogen
    // Save.
    public void save(DataOutputStream writer) throws IOException
    {
-      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+      for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
       {
-         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
          {
             writer.writeInt(sourceCells[x][y].type);
             writer.writeInt(sourceCells[x][y].orientation.ordinal());
@@ -289,11 +289,11 @@ public class Morphogen
    {
       Morphogen m = new Morphogen();
 
-      m.sourceCells = new Cell[Morphogen.SECTOR_DIMENSION][Morphogen.SECTOR_DIMENSION];
-      int d = Morphogen.SECTOR_DIMENSION / 2;
-      for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+      m.sourceCells = new Cell[Morphogen.NEIGHBORHOOD_DIMENSION][Morphogen.NEIGHBORHOOD_DIMENSION];
+      int d = Morphogen.NEIGHBORHOOD_DIMENSION / 2;
+      for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
       {
-         for (int y = 0; y < Morphogen.SECTOR_DIMENSION; y++)
+         for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
          {
             int t = reader.readInt();
             int o = reader.readInt();
@@ -328,9 +328,9 @@ public class Morphogen
    {
       System.out.println("Morphogen:");
       System.out.println("  Source cells:");
-      for (int y = Morphogen.SECTOR_DIMENSION - 1; y >= 0; y--)
+      for (int y = Morphogen.NEIGHBORHOOD_DIMENSION - 1; y >= 0; y--)
       {
-         for (int x = 0; x < Morphogen.SECTOR_DIMENSION; x++)
+         for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
          {
             if (sourceCells[x][y].type == Cell.EMPTY)
             {
