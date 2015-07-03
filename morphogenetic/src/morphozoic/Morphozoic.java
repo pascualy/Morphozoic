@@ -60,12 +60,12 @@ public class Morphozoic extends JFrame implements Runnable
    Image     image;
    Graphics  imageGraphics;
    Dimension imageSize;
-   String    statusMessage       = "";
-   boolean   drawGrid            = true;
-   boolean   displayField        = false;
-   boolean   displayFieldProlong = false;
-   Cell      displayFieldCell    = null;
-   int       displayFieldSphere  = -1;
+   String    statusMessage      = "";
+   boolean   drawGrid           = true;
+   boolean   displayField       = false;
+   Cell      displayFieldCell   = null;
+   int       displayFieldSphere = -1;
+   boolean[]       displaySectorTypeDensity;
 
    // Threads.
    Thread updateThread;
@@ -120,6 +120,13 @@ public class Morphozoic extends JFrame implements Runnable
       canvas.addKeyListener(new CanvasKeyboardListener());
       canvas.setFocusable(true);
       getContentPane().add(canvas, BorderLayout.NORTH);
+
+      int n = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
+      displaySectorTypeDensity = new boolean[n];
+      for (int i = 0; i < n; i++)
+      {
+         displaySectorTypeDensity[i] = false;
+      }
 
       // Create control panel.
       controlPanel     = new Panel();
@@ -226,7 +233,8 @@ public class Morphozoic extends JFrame implements Runnable
    // Update display.
    public void updateDisplay()
    {
-      int x, y, x2, y2, x3, y3, w, h;
+      int   i, j, x, y, x2, y2, x3, y3, w, h, cw, ch;
+      float d;
 
       // Clear.
       imageGraphics.setColor(Color.white);
@@ -241,28 +249,57 @@ public class Morphozoic extends JFrame implements Runnable
          {
             Morphogen.Sphere sphere = displayFieldCell.morphogen.getSphere(displayFieldSphere);
             int              n      = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
-            for (int i = 0; i < n; i++)
+            for (i = 0; i < n; i++)
             {
                Morphogen.Sphere.Sector sector = sphere.getSector(i);
-               for (y2 = 0; y2 < sector.d; y2++)
+               if (displaySectorTypeDensity[i])
                {
-                  for (x2 = 0; x2 < sector.d; x2++)
+                  x3 = sector.dx + displayFieldCell.x;
+                  while (x3 < 0) { x3 += w; }
+                  while (x3 >= w) { x3 -= w; }
+                  y3 = sector.dy + displayFieldCell.y;
+                  while (y3 < 0) { y3 += h; }
+                  while (y3 >= h) { y3 -= h; }
+                  cw = ((int)(cellWidth * (double)sector.d) + 1) / Cell.NUM_TYPES;
+                  for (j = 0, x = (int)(cellWidth * (double)x3) - 1; j < Cell.NUM_TYPES; j++, x += cw)
                   {
-                     x3 = x2 + sector.dx + displayFieldCell.x;
-                     while (x3 < 0) { x3 += w; }
-                     while (x3 >= w) { x3 -= w; }
-                     y3 = y2 + sector.dy + displayFieldCell.y;
-                     while (y3 < 0) { y3 += h; }
-                     while (y3 >= h) { y3 -= h; }
-                     imageGraphics.setColor(organism.cells[x3][y3].getColor());
-                     imageGraphics.fillRect((int)(cellWidth * (double)x3) - 1,
-                                            (int)(cellHeight * (double)(h - (y3 + 1))) - 1,
-                                            (int)cellWidth + 1, (int)cellHeight + 1);
+                     imageGraphics.setColor(Cell.getColor(j));
+                     d  = sector.getTypeDensity(j);
+                     ch = (int)(cellHeight * (float)sector.d * d);
+                     y  = (int)(cellHeight * (double)(h - (y3 + sector.d)));
+                     y += (int)(cellHeight * (float)sector.d) - ch;
+                     imageGraphics.fillRect(x, y, cw + 1, ch);
+                  }
+                  imageGraphics.setColor(Color.green);
+                  for (j = 0, x = (int)(cellWidth * (double)x3) + cw - 1; j < Cell.NUM_TYPES - 1; j++, x += cw)
+                  {
+                     ch = (int)(cellHeight * (float)sector.d);
+                     y  = (int)(cellHeight * (double)(h - (y3 + sector.d)));
+                     imageGraphics.drawLine(x, y, x, y + ch);
+                  }
+               }
+               else
+               {
+                  for (y2 = 0; y2 < sector.d; y2++)
+                  {
+                     for (x2 = 0; x2 < sector.d; x2++)
+                     {
+                        x3 = x2 + sector.dx + displayFieldCell.x;
+                        while (x3 < 0) { x3 += w; }
+                        while (x3 >= w) { x3 -= w; }
+                        y3 = y2 + sector.dy + displayFieldCell.y;
+                        while (y3 < 0) { y3 += h; }
+                        while (y3 >= h) { y3 -= h; }
+                        imageGraphics.setColor(organism.cells[x3][y3].getColor());
+                        imageGraphics.fillRect((int)(cellWidth * (double)x3) - 1,
+                                               (int)(cellHeight * (double)(h - (y3 + 1))) - 1,
+                                               (int)cellWidth + 1, (int)cellHeight + 1);
+                     }
                   }
                }
             }
             imageGraphics.setColor(Color.red);
-            for (int i = 0; i < n; i++)
+            for (i = 0; i < n; i++)
             {
                Morphogen.Sphere.Sector sector = sphere.getSector(i);
                x3 = sector.dx + displayFieldCell.x;
@@ -367,28 +404,16 @@ public class Morphozoic extends JFrame implements Runnable
                      if ((x >= xmin) && (x <= xmax) && (y >= ymin) && (y <= ymax))
                      {
                         selectSector = true;
-                        try
-                        {
-                           displayFieldProlong = true;
-                           new TypeDensityDisplay("Type densities: sphere=" + displayFieldSphere + " sector=" + i,
-                                                  sector, organism.randomizer);
-                        }
-                        catch (Exception ex)
-                        {
-                           System.err.println("Cannot create type density display");
-                        }
+                        displaySectorTypeDensity[i] = !displaySectorTypeDensity[i];
                         break;
                      }
                   }
                   if (!selectSector)
                   {
-                     if (displayFieldProlong)
+                     displayField = false;
+                     for (int i = 0; i < n; i++)
                      {
-                        displayFieldProlong = false;
-                     }
-                     else
-                     {
-                        displayField = false;
+                        displaySectorTypeDensity[i] = false;
                      }
                   }
                }
@@ -450,6 +475,11 @@ public class Morphozoic extends JFrame implements Runnable
                else
                {
                   displayField = false;
+               }
+               int n = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
+               for (int i = 0; i < n; i++)
+               {
+                  displaySectorTypeDensity[i] = false;
                }
             }
          }
