@@ -12,7 +12,6 @@ import java.util.Random;
 
 import morphozoic.Cell;
 import morphozoic.Metamorph;
-import morphozoic.Morphogen;
 import morphozoic.Organism;
 
 // Game of Life.

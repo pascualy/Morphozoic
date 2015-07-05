@@ -19,7 +19,6 @@ import javax.imageio.ImageIO;
 
 import morphozoic.Cell;
 import morphozoic.Metamorph;
-import morphozoic.Morphogen;
 import morphozoic.Organism;
 import morphozoic.Orientation;
 
