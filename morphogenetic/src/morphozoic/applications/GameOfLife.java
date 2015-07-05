@@ -38,11 +38,21 @@ public class GameOfLife extends Organism
          if (args[i].equals("-genMetamorphs"))
          {
             i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               return;
+            }
             genFilename = args[i];
          }
          else if (args[i].equals("-execMetamorphs"))
          {
             i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               return;
+            }
             execFilename = args[i];
          }
          else
@@ -63,10 +73,7 @@ public class GameOfLife extends Organism
          try
          {
             writer = new DataOutputStream(new FileOutputStream(genFilename));
-            writer.writeInt(Cell.NUM_TYPES);
-            writer.writeInt(Morphogen.NEIGHBORHOOD_DIMENSION);
-            writer.writeInt(Morphogen.NUM_SPHERES);
-            writer.flush();
+            saveParms(writer);
          }
          catch (Exception e)
          {
@@ -78,26 +85,10 @@ public class GameOfLife extends Organism
       }
       if (execFilename != null)
       {
-         try {
+         try
+         {
             reader = new DataInputStream(new FileInputStream(execFilename));
-            int n = reader.readInt();
-            if (n != Cell.NUM_TYPES)
-            {
-               throw new IOException("Cell numTypes (" + n + ") in file " + execFilename +
-                                     " must equal cell numTypes (" + Cell.NUM_TYPES + ")");
-            }
-            n = reader.readInt();
-            if (n != Morphogen.NEIGHBORHOOD_DIMENSION)
-            {
-               throw new IOException("Morphogen neighborhoodDimension (" + n + ") in file " + execFilename +
-                                     " must equal neighborhoodDimension (" + Morphogen.NEIGHBORHOOD_DIMENSION + ")");
-            }
-            n = reader.readInt();
-            if (n != Morphogen.NUM_SPHERES)
-            {
-               throw new IOException("Morphogen numSpheres (" + n + ") in file " + execFilename +
-                                     " must equal numSpheres (" + Morphogen.NUM_SPHERES + ")");
-            }
+            loadParms(reader);
             int     x, y;
             boolean eof = false;
             for (x = 0; x < DIMENSIONS.width; x++)

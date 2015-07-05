@@ -33,8 +33,8 @@ public class Metamorph
       {
          for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
          {
-            int x2 = cx + x;
-            int y2 = cy + y;
+            int x2 = Organism.wrapX(cx + x);
+            int y2 = Organism.wrapY(cy + y);
             targetCells[x][y]   = cells[x2][y2].clone();
             targetCells[x][y].x = x - o;
             targetCells[x][y].y = y - o;
@@ -104,18 +104,12 @@ public class Metamorph
    public void exec(Cell cell)
    {
       Cell[][] cells = cell.organism.cells;
-      int w = cell.organism.DIMENSIONS.width;
-      int h = cell.organism.DIMENSIONS.height;
       for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
       {
          for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
          {
-            int x2 = cell.x + targetCells[x][y].x;
-            int y2 = cell.y + targetCells[x][y].y;
-            while (x2 < 0) { x2 += w; }
-            while (x2 >= w) { x2 -= w; }
-            while (y2 < 0) { y2 += h; }
-            while (y2 >= h) { y2 -= h; }
+            int x2 = Organism.wrapX(cell.x + targetCells[x][y].x);
+            int y2 = Organism.wrapY(cell.y + targetCells[x][y].y);
             cells[x2][y2].type        = targetCells[x][y].type;
             cells[x2][y2].orientation = targetCells[x][y].orientation;
          }

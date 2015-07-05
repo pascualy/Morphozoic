@@ -5,6 +5,8 @@ package morphozoic;
 import java.awt.Dimension;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Random;
 import java.util.Vector;
@@ -21,7 +23,12 @@ public class Organism
    public Random           randomizer;
 
    // Dimensions in cell units.
-   public Dimension DIMENSIONS = new Dimension(50, 50);
+   public static final Dimension DEFAULT_DIMENSIONS = new Dimension(50, 50);
+   public static Dimension       DIMENSIONS         = DEFAULT_DIMENSIONS;
+
+   // Morphogenetic locale dispersion.
+   public static final int DEFAULT_MORPHOGENETIC_DISPERSION_MODULO = 1;
+   public static int       MORPHOGENETIC_DISPERSION_MODULO         = DEFAULT_MORPHOGENETIC_DISPERSION_MODULO;
 
    // Cells.
    public Cell[][] cells;
@@ -84,6 +91,28 @@ public class Organism
    }
 
 
+   // Wrap x coordinate.
+   public static int wrapX(int x)
+   {
+      int w = DIMENSIONS.width;
+
+      while (x < 0) { x += w; }
+      while (x >= w) { x -= w; }
+      return(x);
+   }
+
+
+   // Wrap y coordinate.
+   public static int wrapY(int y)
+   {
+      int h = DIMENSIONS.height;
+
+      while (y < 0) { y += h; }
+      while (y >= h) { y -= h; }
+      return(y);
+   }
+
+
    // Update.
    public void update()
    {
@@ -102,7 +131,14 @@ public class Organism
       {
          for (y = 0; y < DIMENSIONS.height; y++)
          {
-            cells[x][y].generateMorphogen();
+            if ((cells[x][y].type != Cell.EMPTY) && morphogeneticLocale(x, y))
+            {
+               cells[x][y].generateMorphogen();
+            }
+            else
+            {
+               cells[x][y].morphogen = null;
+            }
          }
       }
 
@@ -115,6 +151,62 @@ public class Organism
             predecessorCells[x][y].morphogen = cells[x][y].morphogen;
             cells[x][y].morphogen            = null;
          }
+      }
+   }
+
+
+   // Save parameters.
+   public void saveParms(DataOutputStream writer) throws IOException
+   {
+      writer.writeInt(Cell.NUM_TYPES);
+      writer.writeInt(Morphogen.NEIGHBORHOOD_DIMENSION);
+      writer.writeInt(Morphogen.NUM_NEIGHBORHOODS);
+      writer.writeInt(Organism.DIMENSIONS.width);
+      writer.writeInt(Organism.DIMENSIONS.height);
+      writer.writeInt(Organism.MORPHOGENETIC_DISPERSION_MODULO);
+      writer.flush();
+   }
+
+
+   // Load parameters.
+   public void loadParms(DataInputStream reader) throws IOException
+   {
+      int n = reader.readInt();
+
+      if (n != Cell.NUM_TYPES)
+      {
+         throw new IOException("Cell numTypes (" + n + ") in file " + execFilename +
+                               " must equal cell numTypes (" + Cell.NUM_TYPES + ")");
+      }
+      n = reader.readInt();
+      if (n != Morphogen.NEIGHBORHOOD_DIMENSION)
+      {
+         throw new IOException("Morphogen neighborhoodDimension (" + n + ") in file " + execFilename +
+                               " must equal neighborhoodDimension (" + Morphogen.NEIGHBORHOOD_DIMENSION + ")");
+      }
+      n = reader.readInt();
+      if (n != Morphogen.NUM_NEIGHBORHOODS)
+      {
+         throw new IOException("Morphogen numNeighborhoods (" + n + ") in file " + execFilename +
+                               " must equal numNeighborhoods (" + Morphogen.NUM_NEIGHBORHOODS + ")");
+      }
+      n = reader.readInt();
+      if (n != Organism.DIMENSIONS.width)
+      {
+         throw new IOException("Organism dimensions width (" + n + ") in file " + execFilename +
+                               " must equal dimensions width (" + Organism.DIMENSIONS.width + ")");
+      }
+      n = reader.readInt();
+      if (n != Organism.DIMENSIONS.height)
+      {
+         throw new IOException("Organism dimensions height (" + n + ") in file " + execFilename +
+                               " must equal dimensions height (" + Organism.DIMENSIONS.height + ")");
+      }
+      n = reader.readInt();
+      if (n != Organism.MORPHOGENETIC_DISPERSION_MODULO)
+      {
+         throw new IOException("Organism morphogeneticDispersionModulo (" + n + ") in file " + execFilename +
+                               " must equal morphogeneticDispersionModulo (" + Organism.MORPHOGENETIC_DISPERSION_MODULO + ")");
       }
    }
 
@@ -132,7 +224,10 @@ public class Organism
             {
                if (predecessorCells[x][y].type != Cell.EMPTY)
                {
-                  saveMetamorph(predecessorCells[x][y].morphogen, cells[x][y]);
+                  if (predecessorCells[x][y].morphogen != null)
+                  {
+                     saveMetamorph(predecessorCells[x][y].morphogen, cells[x][y]);
+                  }
                }
             }
          }
@@ -188,7 +283,7 @@ public class Organism
       {
          for (y = 0; y < DIMENSIONS.height; y++)
          {
-            if (predecessorCells[x][y].type != Cell.EMPTY)
+            if ((predecessorCells[x][y].type != Cell.EMPTY) && morphogeneticLocale(x, y))
             {
                float dist = 0.0f;
                for (Metamorph m : metamorphs)
@@ -239,12 +334,8 @@ public class Organism
             {
                for (y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
                {
-                  x2 = cx + morphogen.sourceCells[x][y].x;
-                  y2 = cy + morphogen.sourceCells[x][y].y;
-                  while (x2 < 0) { x2 += DIMENSIONS.width; }
-                  while (x2 >= DIMENSIONS.width) { x2 -= DIMENSIONS.width; }
-                  while (y2 < 0) { y2 += DIMENSIONS.height; }
-                  while (y2 >= DIMENSIONS.height) { y2 -= DIMENSIONS.height; }
+                  x2 = wrapX(cx + morphogen.sourceCells[x][y].x);
+                  y2 = wrapY(cy + morphogen.sourceCells[x][y].y);
                   if ((x2 != cx) || (y2 != cy))
                   {
                      if ((morphogen.sourceCells[x][y].type != predecessorCells[x2][y2].type) ||
@@ -305,6 +396,21 @@ public class Organism
             cellMorphs[cx][cy].mark = true;
             active = true;
          }
+      }
+   }
+
+
+   // Is a morphogenetic field centered at this locale?
+   public boolean morphogeneticLocale(int x, int y)
+   {
+      if (((x % MORPHOGENETIC_DISPERSION_MODULO) == 0) &&
+          ((y % MORPHOGENETIC_DISPERSION_MODULO) == 0))
+      {
+         return(true);
+      }
+      else
+      {
+         return(false);
       }
    }
 }

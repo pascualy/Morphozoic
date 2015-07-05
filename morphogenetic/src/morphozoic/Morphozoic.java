@@ -51,7 +51,8 @@ public class Morphozoic extends JFrame implements Runnable
    public static final int DISPLAY_UPDATE_DELAY = 50;
 
    // Display.
-   public static final Dimension displaySize = new Dimension(500, 500);
+   public static final Dimension DEFAULT_DISPLAY_SIZE = new Dimension(500, 500);
+   static Dimension              displaySize          = DEFAULT_DISPLAY_SIZE;
    Canvas    canvas;
    Graphics  canvasGraphics;
    Dimension canvasSize;
@@ -60,11 +61,11 @@ public class Morphozoic extends JFrame implements Runnable
    Image     image;
    Graphics  imageGraphics;
    Dimension imageSize;
-   String    statusMessage      = "";
-   boolean   drawGrid           = true;
-   boolean   displayField       = false;
-   Cell      displayFieldCell   = null;
-   int       displayFieldSphere = -1;
+   String    statusMessage            = "";
+   boolean   drawGrid                 = true;
+   boolean   displayField             = false;
+   Cell      displayFieldCell         = null;
+   int       displayFieldNeighborhood = -1;
    boolean[]       displaySectorTypeDensity;
 
    // Threads.
@@ -87,7 +88,7 @@ public class Morphozoic extends JFrame implements Runnable
    int         fontHeight;
 
    // Options.
-   public static final String OPTIONS = "\n\t[-numCellTypes <number of cell types>]\n\t[-neighborhoodDimension <cell neighborhood dimension>]\n\t[-numSpheres <number of morphogenetic spheres>]\n\t[-randomSeed <random seed>]";
+   public static final String OPTIONS = "\n\t[-displaySize <width> <height>]\n\t[-organismDimensions <width> <height> (# cells)]\n\t[-numCellTypes <number of cell types>]\n\t[-neighborhoodDimension <cell neighborhood dimension>]\n\t[-numNeighborhoods <number of nested neighborhoods>]\n\t[-morphogeneticDispersionModulo <morphogenetic locale dispersion (modulo of x y coordinates)>]\n\t[-randomSeed <random seed>]";
 
    // Constructor.
    public Morphozoic(String organismName, String[] organismArgs,
@@ -113,8 +114,8 @@ public class Morphozoic extends JFrame implements Runnable
       canvas     = new Canvas();
       canvasSize = new Dimension(displaySize.width,
                                  (int)((double)displaySize.height * .95));
-      cellWidth  = (double)canvasSize.width / (double)organism.DIMENSIONS.width;
-      cellHeight = (double)canvasSize.height / (double)organism.DIMENSIONS.height;
+      cellWidth  = (double)canvasSize.width / (double)Organism.DIMENSIONS.width;
+      cellHeight = (double)canvasSize.height / (double)Organism.DIMENSIONS.height;
       canvas.setBounds(0, 0, canvasSize.width, canvasSize.height);
       canvas.addMouseListener(new CanvasMouseListener());
       canvas.addKeyListener(new CanvasKeyboardListener());
@@ -243,23 +244,19 @@ public class Morphozoic extends JFrame implements Runnable
       // Draw organism.
       if (organism != null)
       {
-         w = organism.DIMENSIONS.width;
-         h = organism.DIMENSIONS.height;
+         w = Organism.DIMENSIONS.width;
+         h = Organism.DIMENSIONS.height;
          if (displayField)
          {
-            Morphogen.Sphere sphere = displayFieldCell.morphogen.getSphere(displayFieldSphere);
-            int              n      = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
+            Morphogen.Neighborhood neighborhood = displayFieldCell.morphogen.getNeighborhood(displayFieldNeighborhood);
+            int n = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
             for (i = 0; i < n; i++)
             {
-               Morphogen.Sphere.Sector sector = sphere.getSector(i);
+               Morphogen.Neighborhood.Sector sector = neighborhood.getSector(i);
                if (displaySectorTypeDensity[i])
                {
-                  x3 = sector.dx + displayFieldCell.x;
-                  while (x3 < 0) { x3 += w; }
-                  while (x3 >= w) { x3 -= w; }
-                  y3 = sector.dy + displayFieldCell.y;
-                  while (y3 < 0) { y3 += h; }
-                  while (y3 >= h) { y3 -= h; }
+                  x3 = Organism.wrapX(sector.dx + displayFieldCell.x);
+                  y3 = Organism.wrapY(sector.dy + displayFieldCell.y);
                   cw = ((int)(cellWidth * (double)sector.d) + 1) / Cell.NUM_TYPES;
                   for (j = 0, x = (int)(cellWidth * (double)x3) - 1; j < Cell.NUM_TYPES; j++, x += cw)
                   {
@@ -284,12 +281,8 @@ public class Morphozoic extends JFrame implements Runnable
                   {
                      for (x2 = 0; x2 < sector.d; x2++)
                      {
-                        x3 = x2 + sector.dx + displayFieldCell.x;
-                        while (x3 < 0) { x3 += w; }
-                        while (x3 >= w) { x3 -= w; }
-                        y3 = y2 + sector.dy + displayFieldCell.y;
-                        while (y3 < 0) { y3 += h; }
-                        while (y3 >= h) { y3 -= h; }
+                        x3 = Organism.wrapX(x2 + sector.dx + displayFieldCell.x);
+                        y3 = Organism.wrapY(y2 + sector.dy + displayFieldCell.y);
                         imageGraphics.setColor(organism.cells[x3][y3].getColor());
                         imageGraphics.fillRect((int)(cellWidth * (double)x3) - 1,
                                                (int)(cellHeight * (double)(h - (y3 + 1))) - 1,
@@ -301,13 +294,9 @@ public class Morphozoic extends JFrame implements Runnable
             imageGraphics.setColor(Color.red);
             for (i = 0; i < n; i++)
             {
-               Morphogen.Sphere.Sector sector = sphere.getSector(i);
-               x3 = sector.dx + displayFieldCell.x;
-               while (x3 < 0) { x3 += w; }
-               while (x3 >= w) { x3 -= w; }
-               y3 = displayFieldCell.y - sector.dy;
-               while (y3 < 0) { y3 += h; }
-               while (y3 >= h) { y3 -= h; }
+               Morphogen.Neighborhood.Sector sector = neighborhood.getSector(i);
+               x3 = Organism.wrapX(sector.dx + displayFieldCell.x);
+               y3 = Organism.wrapY(displayFieldCell.y - sector.dy);
                imageGraphics.drawRect((int)(cellWidth * (double)x3) - 1,
                                       (int)(cellHeight * (double)(h - (y3 + 1))) - 1,
                                       (int)(cellWidth * (double)sector.d) + 1, (int)(cellHeight * sector.d) + 1);
@@ -329,13 +318,13 @@ public class Morphozoic extends JFrame implements Runnable
             if (drawGrid)
             {
                y2 = imageSize.height;
-               for (x = 1, x2 = (int)cellWidth - 1; x < organism.DIMENSIONS.width;
+               for (x = 1, x2 = (int)cellWidth - 1; x < Organism.DIMENSIONS.width;
                     x++, x2 = (int)(cellWidth * (double)x) - 1)
                {
                   imageGraphics.drawLine(x2, 0, x2, y2);
                }
                x2 = imageSize.width;
-               for (y = 1, y2 = (int)cellHeight - 1; y < organism.DIMENSIONS.height;
+               for (y = 1, y2 = (int)cellHeight - 1; y < Organism.DIMENSIONS.height;
                     y++, y2 = (int)(cellHeight * (double)y) - 1)
                {
                   imageGraphics.drawLine(0, y2, x2, y2);
@@ -377,7 +366,7 @@ public class Morphozoic extends JFrame implements Runnable
          int mx = e.getX();
          int my = e.getY();
          int x  = (int)((double)mx / cellWidth);
-         int y  = organism.DIMENSIONS.height - (int)((double)my / cellHeight) - 1;
+         int y  = Organism.DIMENSIONS.height - (int)((double)my / cellHeight) - 1;
 
          if ((x >= 0) && (x < displaySize.width) && (y >= 0) && (y < displaySize.height))
          {
@@ -385,20 +374,14 @@ public class Morphozoic extends JFrame implements Runnable
             {
                if (displayField)
                {
-                  int              w            = organism.DIMENSIONS.width;
-                  int              h            = organism.DIMENSIONS.height;
-                  Morphogen.Sphere sphere       = displayFieldCell.morphogen.getSphere(displayFieldSphere);
-                  boolean          selectSector = false;
-                  int              n            = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
+                  Morphogen.Neighborhood neighborhood = displayFieldCell.morphogen.getNeighborhood(displayFieldNeighborhood);
+                  boolean                selectSector = false;
+                  int n = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
                   for (int i = 0; i < n; i++)
                   {
-                     Morphogen.Sphere.Sector sector = sphere.getSector(i);
-                     int xmin = sector.dx + displayFieldCell.x;
-                     while (xmin < 0) { xmin += w; }
-                     while (xmin >= w) { xmin -= w; }
-                     int ymin = sector.dy + displayFieldCell.y;
-                     while (ymin < 0) { ymin += h; }
-                     while (ymin >= h) { ymin -= h; }
+                     Morphogen.Neighborhood.Sector sector = neighborhood.getSector(i);
+                     int xmin = Organism.wrapX(sector.dx + displayFieldCell.x);
+                     int ymin = Organism.wrapY(sector.dy + displayFieldCell.y);
                      int xmax = xmin + sector.d - 1;
                      int ymax = ymin + sector.d - 1;
                      if ((x >= xmin) && (x <= xmax) && (y >= ymin) && (y <= ymax))
@@ -436,8 +419,8 @@ public class Morphozoic extends JFrame implements Runnable
                      {
                         displayFieldCell = organism.cells[x][y].clone();
                         displayFieldCell.generateMorphogen();
-                        displayFieldSphere = 0;
-                        displayField       = true;
+                        displayFieldNeighborhood = 0;
+                        displayField             = true;
                      }
                   }
                }
@@ -470,7 +453,7 @@ public class Morphozoic extends JFrame implements Runnable
             {
                if (e.getKeyChar() == ' ')
                {
-                  displayFieldSphere = (displayFieldSphere + 1) % Morphogen.NUM_SPHERES;
+                  displayFieldNeighborhood = (displayFieldNeighborhood + 1) % Morphogen.NUM_NEIGHBORHOODS;
                }
                else
                {
@@ -500,11 +483,81 @@ public class Morphozoic extends JFrame implements Runnable
          if (args[i].equals("-organism"))
          {
             i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               return;
+            }
             organismName = args[i];
+         }
+         else if (args[i].equals("-displaySize"))
+         {
+            i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               return;
+            }
+            int w = Integer.parseInt(args[i]);
+            if (w <= 0)
+            {
+               System.err.println("Display width must be positive");
+               System.err.println(usage);
+               return;
+            }
+            i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               return;
+            }
+            int h = Integer.parseInt(args[i]);
+            if (h <= 0)
+            {
+               System.err.println("Display height must be positive");
+               System.err.println(usage);
+               return;
+            }
+            displaySize = new Dimension(w, h);
+         }
+         else if (args[i].equals("-organismDimensions"))
+         {
+            i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               return;
+            }
+            int w = Integer.parseInt(args[i]);
+            if (w <= 0)
+            {
+               System.err.println("Organism width dimension must be positive");
+               System.err.println(usage);
+               return;
+            }
+            i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               return;
+            }
+            int h = Integer.parseInt(args[i]);
+            if (h <= 0)
+            {
+               System.err.println("Organism height dimension must be positive");
+               System.err.println(usage);
+               return;
+            }
+            Organism.DIMENSIONS = new Dimension(w, h);
          }
          else if (args[i].equals("-numCellTypes"))
          {
             i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               return;
+            }
             Cell.NUM_TYPES = Integer.parseInt(args[i]);
             if (Cell.NUM_TYPES <= 0)
             {
@@ -516,6 +569,11 @@ public class Morphozoic extends JFrame implements Runnable
          else if (args[i].equals("-neighborhoodDimension"))
          {
             i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               return;
+            }
             Morphogen.NEIGHBORHOOD_DIMENSION = Integer.parseInt(args[i]);
             if ((Morphogen.NEIGHBORHOOD_DIMENSION <= 0) || ((Morphogen.NEIGHBORHOOD_DIMENSION % 2) != 1))
             {
@@ -524,13 +582,34 @@ public class Morphozoic extends JFrame implements Runnable
                return;
             }
          }
-         else if (args[i].equals("-numSpheres"))
+         else if (args[i].equals("-numNeighborhoods"))
          {
             i++;
-            Morphogen.NUM_SPHERES = Integer.parseInt(args[i]);
-            if (Morphogen.NUM_SPHERES <= 0)
+            if (i == args.length)
             {
-               System.err.println("Number of spheres must be positive");
+               System.err.println(usage);
+               return;
+            }
+            Morphogen.NUM_NEIGHBORHOODS = Integer.parseInt(args[i]);
+            if (Morphogen.NUM_NEIGHBORHOODS <= 0)
+            {
+               System.err.println("Number of neighborhoods must be positive");
+               System.err.println(usage);
+               return;
+            }
+         }
+         else if (args[i].equals("-morphogeneticDispersionModulo"))
+         {
+            i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               return;
+            }
+            Organism.MORPHOGENETIC_DISPERSION_MODULO = Integer.parseInt(args[i]);
+            if (Morphogen.NUM_NEIGHBORHOODS <= 0)
+            {
+               System.err.println("Morphogenetic dispersion modulo must be positive");
                System.err.println(usage);
                return;
             }
@@ -538,6 +617,11 @@ public class Morphozoic extends JFrame implements Runnable
          else if (args[i].equals("-randomSeed"))
          {
             i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               return;
+            }
             randomSeed = Integer.parseInt(args[i]);
          }
          else if (args[i].equals("-help"))

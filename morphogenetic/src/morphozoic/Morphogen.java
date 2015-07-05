@@ -11,26 +11,27 @@ import java.util.Vector;
 
 /*
  * Morphogenetic field:
- * A field is a set of nested spheres of increasing size.
- * Each sphere spans a central sector of cells and the sectors in its Moore neighborhood.
- * A vector of cell type densities is associated with each sector.
+ * A field is a set of nested neighborhoods of increasing size.
+ * A neighborhood is an NxN configuration sub-neighborhood sectors.
+ * The smallest neighborhood is a single cell.
+ * A sector contains a vector of cell type densities from its neighborhood.
  */
 public class Morphogen
 {
    // Source cell configuration.
    public Cell[][] sourceCells;
 
-   // Spheres.
-   public static final int DEFAULT_NUM_SPHERES = 3;
-   public static int       NUM_SPHERES         = DEFAULT_NUM_SPHERES;
-   public Vector<Sphere>   spheres;
+   // Neighborhoods.
+   public static final int     DEFAULT_NUM_NEIGHBORHOODS = 3;
+   public static int           NUM_NEIGHBORHOODS         = DEFAULT_NUM_NEIGHBORHOODS;
+   public Vector<Neighborhood> neighborhoods;
 
-   // Sphere neighborhood dimension: odd number.
+   // Neighborhood dimension: odd number.
    public static final int DEFAULT_NEIGHBORHOOD_DIMENSION = 3;
    public static int       NEIGHBORHOOD_DIMENSION         = DEFAULT_NEIGHBORHOOD_DIMENSION;
 
-   // Sphere.
-   public class Sphere
+   // Neighborhood.
+   public class Neighborhood
    {
       // Sector.
       public class Sector
@@ -61,7 +62,7 @@ public class Morphogen
 
       public Sector[] sectors;
 
-      public Sphere()
+      public Neighborhood()
       {
          sectors = new Sector[NEIGHBORHOOD_DIMENSION * NEIGHBORHOOD_DIMENSION];
       }
@@ -91,8 +92,6 @@ public class Morphogen
       // Create source cell configuration.
       sourceCells    = new Cell[Morphogen.NEIGHBORHOOD_DIMENSION][Morphogen.NEIGHBORHOOD_DIMENSION];
       Cell[][] cells = cell.organism.cells;
-      int w  = cell.organism.DIMENSIONS.width;
-      int h  = cell.organism.DIMENSIONS.height;
       int o  = Morphogen.NEIGHBORHOOD_DIMENSION / 2;
       int cx = cell.x - o;
       int cy = cell.y - o;
@@ -100,23 +99,19 @@ public class Morphogen
       {
          for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
          {
-            int x2 = cx + x;
-            int y2 = cy + y;
-            while (x2 < 0) { x2 += w; }
-            while (x2 >= w) { x2 -= w; }
-            while (y2 < 0) { y2 += h; }
-            while (y2 >= h) { y2 -= h; }
+            int x2 = Organism.wrapX(cx + x);
+            int y2 = Organism.wrapY(cy + y);
             sourceCells[x][y]   = cells[x2][y2].clone();
             sourceCells[x][y].x = x - o;
             sourceCells[x][y].y = y - o;
          }
       }
 
-      // Create spheres.
-      spheres = new Vector<Sphere>();
-      for (int i = 0; i < NUM_SPHERES; i++)
+      // Create neighborhoods.
+      neighborhoods = new Vector<Neighborhood>();
+      for (int i = 0; i < NUM_NEIGHBORHOODS; i++)
       {
-         spheres.add(generateSphere(cell, i));
+         neighborhoods.add(generateNeighborhood(cell, i));
       }
 
       // Create hash code.
@@ -126,21 +121,19 @@ public class Morphogen
 
    public Morphogen()
    {
-      sourceCells = null;
-      spheres     = null;
-      hashCode    = 0;
+      sourceCells   = null;
+      neighborhoods = null;
+      hashCode      = 0;
    }
 
 
-   // Generate field sphere.
-   private Sphere generateSphere(Cell cell, int sphereNum)
+   // Generate field neighborhood.
+   private Neighborhood generateNeighborhood(Cell cell, int neighborhoodNum)
    {
-      Sphere sphere = new Sphere();
+      Neighborhood neighborhood = new Neighborhood();
 
       Cell[][] cells = cell.organism.cells;
-      int   w  = cell.organism.DIMENSIONS.width;
-      int   h  = cell.organism.DIMENSIONS.height;
-      int   d  = (int)Math.pow((double)NEIGHBORHOOD_DIMENSION, (double)sphereNum);
+      int   d  = (int)Math.pow((double)NEIGHBORHOOD_DIMENSION, (double)neighborhoodNum);
       float d2 = (float)(d * d);
       int   o  = (d * NEIGHBORHOOD_DIMENSION) / 2;
       int   x  = cell.x - o;
@@ -156,26 +149,22 @@ public class Morphogen
             {
                for (int x3 = 0; x3 < d; x3++)
                {
-                  int x4 = x2 + x3;
-                  while (x4 < 0) { x4 += w; }
-                  while (x4 >= w) { x4 -= w; }
-                  int y4 = y2 + y3;
-                  while (y4 < 0) { y4 += h; }
-                  while (y4 >= h) { y4 -= h; }
+                  int x4 = Organism.wrapX(x2 + x3);
+                  int y4 = Organism.wrapY(y2 + y3);
                   if (cells[x4][y4].type != Cell.EMPTY)
                   {
                      t[cells[x4][y4].type]++;
                   }
                }
             }
-            Sphere.Sector sector = sphere.addSector(b++, x2 - cell.x, y2 - cell.y, d);
+            Neighborhood.Sector sector = neighborhood.addSector(b++, x2 - cell.x, y2 - cell.y, d);
             for (int i = 0; i < Cell.NUM_TYPES; i++)
             {
                sector.setTypeDensity(i, (float)t[i] / d2);
             }
          }
       }
-      return(sphere);
+      return(neighborhood);
    }
 
 
@@ -184,12 +173,12 @@ public class Morphogen
    {
       Random r = new Random(65);
 
-      for (int i = 0; i < NUM_SPHERES; i++)
+      for (int i = 0; i < NUM_NEIGHBORHOODS; i++)
       {
-         Sphere sphere = spheres.get(i);
-         for (int j = 0; j < sphere.sectors.length; j++)
+         Neighborhood neighborhood = neighborhoods.get(i);
+         for (int j = 0; j < neighborhood.sectors.length; j++)
          {
-            Sphere.Sector sector = sphere.getSector(j);
+            Neighborhood.Sector sector = neighborhood.getSector(j);
             for (int k = 0; k < Cell.NUM_TYPES; k++)
             {
                int   h = r.nextInt();
@@ -206,10 +195,10 @@ public class Morphogen
    }
 
 
-   // Get a sphere.
-   public Sphere getSphere(int sphereNum)
+   // Get a neighborhood.
+   public Neighborhood getNeighborhood(int neighborhoodNum)
    {
-      return(spheres.get(sphereNum));
+      return(neighborhoods.get(neighborhoodNum));
    }
 
 
@@ -222,14 +211,14 @@ public class Morphogen
       {
          return(0.0f);
       }
-      for (int i = 0; i < NUM_SPHERES; i++)
+      for (int i = 0; i < NUM_NEIGHBORHOODS; i++)
       {
-         Sphere s1 = getSphere(i);
-         Sphere s2 = morphogen.getSphere(i);
-         for (int j = 0; j < s1.sectors.length; j++)
+         Neighborhood n1 = getNeighborhood(i);
+         Neighborhood n2 = morphogen.getNeighborhood(i);
+         for (int j = 0; j < n1.sectors.length; j++)
          {
-            Sphere.Sector t1 = s1.sectors[j];
-            Sphere.Sector t2 = s2.sectors[j];
+            Neighborhood.Sector t1 = n1.sectors[j];
+            Neighborhood.Sector t2 = n2.sectors[j];
             for (int k = 0; k < t1.typeDensities.length; k++)
             {
                delta += Math.abs(t1.typeDensities[k] - t2.typeDensities[k]);
@@ -265,11 +254,11 @@ public class Morphogen
             writer.writeInt(sourceCells[x][y].orientation.ordinal());
          }
       }
-      for (Sphere s : spheres)
+      for (Neighborhood n : neighborhoods)
       {
-         for (int i = 0; i < s.sectors.length; i++)
+         for (int i = 0; i < n.sectors.length; i++)
          {
-            Sphere.Sector t = s.sectors[i];
+            Neighborhood.Sector t = n.sectors[i];
             writer.writeInt(t.dx);
             writer.writeInt(t.dy);
             writer.writeInt(t.d);
@@ -300,22 +289,22 @@ public class Morphogen
             m.sourceCells[x][y] = new Cell(t, x - d, y - d, Orientation.fromInt(o), null);
          }
       }
-      m.spheres = new Vector<Sphere>();
-      for (int i = 0; i < NUM_SPHERES; i++)
+      m.neighborhoods = new Vector<Neighborhood>();
+      for (int i = 0; i < NUM_NEIGHBORHOODS; i++)
       {
-         Sphere s = m.new Sphere();
-         m.spheres.add(s);
-         for (int j = 0; j < s.sectors.length; j++)
+         Neighborhood n = m.new Neighborhood();
+         m.neighborhoods.add(n);
+         for (int j = 0; j < n.sectors.length; j++)
          {
             int dx = reader.readInt();
             int dy = reader.readInt();
             d = reader.readInt();
-            Sphere.Sector t = s.new Sector(dx, dy, d);
+            Neighborhood.Sector t = n.new Sector(dx, dy, d);
             for (int k = 0; k < Cell.NUM_TYPES; k++)
             {
                t.setTypeDensity(k, reader.readFloat());
             }
-            s.sectors[j] = t;
+            n.sectors[j] = t;
          }
       }
       m.hashCode = reader.readInt();
@@ -343,14 +332,14 @@ public class Morphogen
          }
          System.out.println();
       }
-      System.out.println("  Spheres:");
-      for (int s = 0; s < spheres.size(); s++)
+      System.out.println("  Neighborhoods:");
+      for (int n = 0; n < neighborhoods.size(); n++)
       {
-         System.out.println("    Sphere " + s + ":");
-         for (int i = 0; i < spheres.get(s).sectors.length; i++)
+         System.out.println("    Neighborhood " + n + ":");
+         for (int i = 0; i < neighborhoods.get(n).sectors.length; i++)
          {
             System.out.print("      Sector " + i + ":");
-            Sphere.Sector t = spheres.get(s).sectors[i];
+            Neighborhood.Sector t = neighborhoods.get(n).sectors[i];
             System.out.print(" dx=" + t.dx);
             System.out.print(" dy=" + t.dy);
             System.out.println(" d=" + t.d);

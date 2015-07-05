@@ -13,8 +13,8 @@ public class TypeDensityDisplay extends JFrame implements Runnable, WindowListen
 {
    private static final long serialVersionUID = 1L;
 
-   // Morphogenetic field sphere sector.
-   Morphogen.Sphere.Sector sector;
+   // Morphogenetic field neighborhood sector.
+   Morphogen.Neighborhood.Sector sector;
 
    // Display rate (milliseconds).
    static final int DISPLAY_UPDATE_DELAY = 50;
@@ -30,7 +30,7 @@ public class TypeDensityDisplay extends JFrame implements Runnable, WindowListen
    Thread    displayThread = null;
 
    // Constructor.
-   public TypeDensityDisplay(String title, Morphogen.Sphere.Sector sector, Random randomizer) throws Exception
+   public TypeDensityDisplay(String title, Morphogen.Neighborhood.Sector sector, Random randomizer) throws Exception
    {
       // Save sector.
       this.sector = sector;
