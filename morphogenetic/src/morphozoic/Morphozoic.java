@@ -25,6 +25,8 @@
 package morphozoic;
 
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
@@ -51,8 +53,8 @@ public class Morphozoic extends JFrame implements Runnable
    public static final int DISPLAY_UPDATE_DELAY = 50;
 
    // Display.
-   public static final Dimension DEFAULT_DISPLAY_SIZE = new Dimension(500, 500);
-   static Dimension              displaySize          = DEFAULT_DISPLAY_SIZE;
+   public static final Dimension DEFAULT_DISPLAY_SIZE = new Dimension(500, 550);
+   static Dimension              DISPLAY_SIZE         = DEFAULT_DISPLAY_SIZE;
    Canvas    canvas;
    Graphics  canvasGraphics;
    Dimension canvasSize;
@@ -107,21 +109,7 @@ public class Morphozoic extends JFrame implements Runnable
          throw new Exception("Cannot create organism " + organismName);
       }
 
-      // Create display.
-      setTitle(organismName);
-      setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      setLayout(new BorderLayout());
-      canvas     = new Canvas();
-      canvasSize = new Dimension(displaySize.width,
-                                 (int)((double)displaySize.height * .95));
-      cellWidth  = (double)canvasSize.width / (double)Organism.DIMENSIONS.width;
-      cellHeight = (double)canvasSize.height / (double)Organism.DIMENSIONS.height;
-      canvas.setBounds(0, 0, canvasSize.width, canvasSize.height);
-      canvas.addMouseListener(new CanvasMouseListener());
-      canvas.addKeyListener(new CanvasKeyboardListener());
-      canvas.setFocusable(true);
-      getContentPane().add(canvas, BorderLayout.NORTH);
-
+      // Initialize sector type density selector.
       int n = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
       displaySectorTypeDensity = new boolean[n];
       for (int i = 0; i < n; i++)
@@ -129,39 +117,37 @@ public class Morphozoic extends JFrame implements Runnable
          displaySectorTypeDensity[i] = false;
       }
 
-      // Create control panel.
-      controlPanel     = new Panel();
-      controlPanelSize = new Dimension(displaySize.width,
-                                       (int)((double)displaySize.height * .05));
-      controlPanel.setBounds(0, canvasSize.height, controlPanelSize.width,
-                             controlPanelSize.height);
-      getContentPane().add(controlPanel, BorderLayout.SOUTH);
-      stepButton = new Checkbox("Step");
-      controlPanel.add(stepButton);
-      controlPanel.add(new Label("Fast", Label.RIGHT));
-      updateSlider = new JSlider(Scrollbar.HORIZONTAL, MIN_UPDATE_DELAY,
-                                 MAX_UPDATE_DELAY, MAX_UPDATE_DELAY);
-      updateSlider.addChangeListener(new updateSliderListener());
-      controlPanel.add(updateSlider);
-      controlPanel.add(new Label("Stop", Label.LEFT));
+      // Create display.
+      setTitle(organismName);
+      setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      setLayout(new BorderLayout());
+      createDisplay();
 
-      // Show app.
-      pack();
-      setVisible(true);
-
-      // Get canvas image.
-      canvasGraphics = canvas.getGraphics();
-      image          = createImage(canvasSize.width, canvasSize.height);
-      imageGraphics  = image.getGraphics();
-      imageSize      = canvasSize;
-
-      // Set font data.
-      Graphics g = getGraphics();
-      g.setFont(font);
-      fontMetrics = g.getFontMetrics();
-      fontAscent  = fontMetrics.getMaxAscent();
-      fontWidth   = fontMetrics.getMaxAdvance();
-      fontHeight  = fontMetrics.getHeight();
+      // Resize listener.
+      addComponentListener(new ComponentAdapter()
+                           {
+                              public void componentResized(ComponentEvent e)
+                              {
+                                 synchronized (lock)
+                                 {
+                                    int w = getWidth();
+                                    int h = getHeight();
+                                    if ((DISPLAY_SIZE.width != w) || (DISPLAY_SIZE.height != h))
+                                    {
+                                       DISPLAY_SIZE = new Dimension(w, h);
+                                       getContentPane().remove(canvas);
+                                       canvas = null;
+                                       getContentPane().remove(controlPanel);
+                                       controlPanel = null;
+                                       validate();
+                                       createDisplay();
+                                       DISPLAY_SIZE.width = getWidth();
+                                       DISPLAY_SIZE.height = getHeight();
+                                    }
+                                 }
+                              }
+                           }
+                           );
 
       // Create update thread.
       if ((updateThread == null) && (organism != null))
@@ -178,6 +164,57 @@ public class Morphozoic extends JFrame implements Runnable
          displayThread.setPriority(Thread.MIN_PRIORITY);
          displayThread.start();
       }
+   }
+
+
+   // Create display..
+   private void createDisplay()
+   {
+      // Create canvas.
+      canvas     = new Canvas();
+      canvasSize = new Dimension(DISPLAY_SIZE.width,
+                                 (int)((double)DISPLAY_SIZE.height * .9));
+      cellWidth  = (double)canvasSize.width / (double)Organism.DIMENSIONS.width;
+      cellHeight = (double)canvasSize.height / (double)Organism.DIMENSIONS.height;
+      canvas.setBounds(0, 0, canvasSize.width, canvasSize.height);
+      canvas.addMouseListener(new CanvasMouseListener());
+      canvas.addKeyListener(new CanvasKeyboardListener());
+      canvas.setFocusable(true);
+      getContentPane().add(canvas, BorderLayout.NORTH);
+
+      // Create control panel.
+      controlPanel     = new Panel();
+      controlPanelSize = new Dimension(DISPLAY_SIZE.width,
+                                       (int)((double)DISPLAY_SIZE.height * .1));
+      controlPanel.setBounds(0, canvasSize.height, controlPanelSize.width,
+                             controlPanelSize.height);
+      getContentPane().add(controlPanel, BorderLayout.SOUTH);
+      stepButton = new Checkbox("Step");
+      controlPanel.add(stepButton);
+      controlPanel.add(new Label("Fast", Label.RIGHT));
+      updateSlider = new JSlider(Scrollbar.HORIZONTAL, MIN_UPDATE_DELAY,
+                                 MAX_UPDATE_DELAY, MAX_UPDATE_DELAY);
+      updateSlider.addChangeListener(new updateSliderListener());
+      controlPanel.add(updateSlider);
+      controlPanel.add(new Label("Stop", Label.LEFT));
+
+      // Pack and show.
+      pack();
+      setVisible(true);
+
+      // Get canvas image.
+      canvasGraphics = canvas.getGraphics();
+      image          = createImage(canvasSize.width, canvasSize.height);
+      imageGraphics  = image.getGraphics();
+      imageSize      = canvasSize;
+
+      // Set font data.
+      Graphics g = getGraphics();
+      g.setFont(font);
+      fontMetrics = g.getFontMetrics();
+      fontAscent  = fontMetrics.getMaxAscent();
+      fontWidth   = fontMetrics.getMaxAdvance();
+      fontHeight  = fontMetrics.getHeight();
    }
 
 
@@ -368,7 +405,7 @@ public class Morphozoic extends JFrame implements Runnable
          int x  = (int)((double)mx / cellWidth);
          int y  = Organism.DIMENSIONS.height - (int)((double)my / cellHeight) - 1;
 
-         if ((x >= 0) && (x < displaySize.width) && (y >= 0) && (y < displaySize.height))
+         if ((x >= 0) && (x < DISPLAY_SIZE.width) && (y >= 0) && (y < DISPLAY_SIZE.height))
          {
             synchronized (lock)
             {
@@ -518,7 +555,7 @@ public class Morphozoic extends JFrame implements Runnable
                System.err.println(usage);
                return;
             }
-            displaySize = new Dimension(w, h);
+            DISPLAY_SIZE = new Dimension(w, h);
          }
          else if (args[i].equals("-organismDimensions"))
          {

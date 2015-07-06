@@ -12,3 +12,6 @@ java -jar morphozoic.jar -execMetamorphs metamorphs.dat
 
 To run the Game of Life application, specify with the -organism option:
 java -jar morphozoic.jar -organism morphozoic.applications.GameOfLife
+
+To run the C elegans application, specify with the -organism option:
+java -jar morphozoic.jar -organism morphozoic.applications.Celegans
