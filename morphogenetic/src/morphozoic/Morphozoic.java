@@ -90,11 +90,10 @@ public class Morphozoic extends JFrame implements Runnable
    int         fontHeight;
 
    // Options.
-   public static final String OPTIONS = "\n\t[-displaySize <width> <height>]\n\t[-organismDimensions <width> <height> (# cells)]\n\t[-numCellTypes <number of cell types>]\n\t[-neighborhoodDimension <cell neighborhood dimension>]\n\t[-numNeighborhoods <number of nested neighborhoods>]\n\t[-morphogeneticDispersionModulo <morphogenetic locale dispersion (modulo of x y coordinates)>]\n\t[-randomSeed <random seed>]";
+   public static final String OPTIONS = "\n\t[-displaySize <width> <height>]\n\t[-organismDimensions <width> <height> (# cells)]\n\t[-numCellTypes <number of cell types>]\n\t[-neighborhoodDimension <cell neighborhood dimension>]\n\t[-numNeighborhoods <number of nested neighborhoods>]\n\t[-morphogeneticCellDispersion <morphogenetic cell dispersiony>]\n\t[-randomSeed <random seed>]";
 
    // Constructor.
-   public Morphozoic(String organismName, String[] organismArgs,
-                     Integer randomSeed) throws Exception
+   public Morphozoic(String organismName, String[] organismArgs) throws Exception
    {
       // Create the organism.
       this.organismName = organismName;
@@ -102,7 +101,7 @@ public class Morphozoic extends JFrame implements Runnable
       {
          Class<?>       cl   = Class.forName(organismName);
          Constructor<?> cons = cl.getConstructor(String[].class, Integer.class );
-         organism = (Organism)cons.newInstance(organismArgs, randomSeed);
+         organism = (Organism)cons.newInstance(organismArgs, 0);
       }
       catch (Exception e)
       {
@@ -110,7 +109,7 @@ public class Morphozoic extends JFrame implements Runnable
       }
 
       // Initialize sector type density selector.
-      int n = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
+      int n = Parameters.NEIGHBORHOOD_DIMENSION * Parameters.NEIGHBORHOOD_DIMENSION;
       displaySectorTypeDensity = new boolean[n];
       for (int i = 0; i < n; i++)
       {
@@ -174,8 +173,8 @@ public class Morphozoic extends JFrame implements Runnable
       canvas     = new Canvas();
       canvasSize = new Dimension(DISPLAY_SIZE.width,
                                  (int)((double)DISPLAY_SIZE.height * .9));
-      cellWidth  = (double)canvasSize.width / (double)Organism.DIMENSIONS.width;
-      cellHeight = (double)canvasSize.height / (double)Organism.DIMENSIONS.height;
+      cellWidth  = (double)canvasSize.width / (double)Parameters.ORGANISM_DIMENSIONS.width;
+      cellHeight = (double)canvasSize.height / (double)Parameters.ORGANISM_DIMENSIONS.height;
       canvas.setBounds(0, 0, canvasSize.width, canvasSize.height);
       canvas.addMouseListener(new CanvasMouseListener());
       canvas.addKeyListener(new CanvasKeyboardListener());
@@ -281,12 +280,12 @@ public class Morphozoic extends JFrame implements Runnable
       // Draw organism.
       if (organism != null)
       {
-         w = Organism.DIMENSIONS.width;
-         h = Organism.DIMENSIONS.height;
+         w = Parameters.ORGANISM_DIMENSIONS.width;
+         h = Parameters.ORGANISM_DIMENSIONS.height;
          if (displayField)
          {
             Morphogen.Neighborhood neighborhood = displayFieldCell.morphogen.getNeighborhood(displayFieldNeighborhood);
-            int n = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
+            int n = Parameters.NEIGHBORHOOD_DIMENSION * Parameters.NEIGHBORHOOD_DIMENSION;
             for (i = 0; i < n; i++)
             {
                Morphogen.Neighborhood.Sector sector = neighborhood.getSector(i);
@@ -294,8 +293,8 @@ public class Morphozoic extends JFrame implements Runnable
                {
                   x3 = Organism.wrapX(sector.dx + displayFieldCell.x);
                   y3 = Organism.wrapY(sector.dy + displayFieldCell.y);
-                  cw = ((int)(cellWidth * (double)sector.d) + 1) / Cell.NUM_TYPES;
-                  for (j = 0, x = (int)(cellWidth * (double)x3) - 1; j < Cell.NUM_TYPES; j++, x += cw)
+                  cw = ((int)(cellWidth * (double)sector.d) + 1) / Parameters.NUM_CELL_TYPES;
+                  for (j = 0, x = (int)(cellWidth * (double)x3) - 1; j < Parameters.NUM_CELL_TYPES; j++, x += cw)
                   {
                      imageGraphics.setColor(Cell.getColor(j));
                      d  = sector.getTypeDensity(j);
@@ -305,7 +304,7 @@ public class Morphozoic extends JFrame implements Runnable
                      imageGraphics.fillRect(x, y, cw + 1, ch);
                   }
                   imageGraphics.setColor(Color.green);
-                  for (j = 0, x = (int)(cellWidth * (double)x3) + cw - 1; j < Cell.NUM_TYPES - 1; j++, x += cw)
+                  for (j = 0, x = (int)(cellWidth * (double)x3) + cw - 1; j < Parameters.NUM_CELL_TYPES - 1; j++, x += cw)
                   {
                      ch = (int)(cellHeight * (float)sector.d);
                      y  = (int)(cellHeight * (double)(h - (y3 + sector.d)));
@@ -355,13 +354,13 @@ public class Morphozoic extends JFrame implements Runnable
             if (drawGrid)
             {
                y2 = imageSize.height;
-               for (x = 1, x2 = (int)cellWidth - 1; x < Organism.DIMENSIONS.width;
+               for (x = 1, x2 = (int)cellWidth - 1; x < Parameters.ORGANISM_DIMENSIONS.width;
                     x++, x2 = (int)(cellWidth * (double)x) - 1)
                {
                   imageGraphics.drawLine(x2, 0, x2, y2);
                }
                x2 = imageSize.width;
-               for (y = 1, y2 = (int)cellHeight - 1; y < Organism.DIMENSIONS.height;
+               for (y = 1, y2 = (int)cellHeight - 1; y < Parameters.ORGANISM_DIMENSIONS.height;
                     y++, y2 = (int)(cellHeight * (double)y) - 1)
                {
                   imageGraphics.drawLine(0, y2, x2, y2);
@@ -403,7 +402,7 @@ public class Morphozoic extends JFrame implements Runnable
          int mx = e.getX();
          int my = e.getY();
          int x  = (int)((double)mx / cellWidth);
-         int y  = Organism.DIMENSIONS.height - (int)((double)my / cellHeight) - 1;
+         int y  = Parameters.ORGANISM_DIMENSIONS.height - (int)((double)my / cellHeight) - 1;
 
          if ((x >= 0) && (x < DISPLAY_SIZE.width) && (y >= 0) && (y < DISPLAY_SIZE.height))
          {
@@ -413,7 +412,7 @@ public class Morphozoic extends JFrame implements Runnable
                {
                   Morphogen.Neighborhood neighborhood = displayFieldCell.morphogen.getNeighborhood(displayFieldNeighborhood);
                   boolean                selectSector = false;
-                  int n = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
+                  int n = Parameters.NEIGHBORHOOD_DIMENSION * Parameters.NEIGHBORHOOD_DIMENSION;
                   for (int i = 0; i < n; i++)
                   {
                      Morphogen.Neighborhood.Sector sector = neighborhood.getSector(i);
@@ -490,13 +489,13 @@ public class Morphozoic extends JFrame implements Runnable
             {
                if (e.getKeyChar() == ' ')
                {
-                  displayFieldNeighborhood = (displayFieldNeighborhood + 1) % Morphogen.NUM_NEIGHBORHOODS;
+                  displayFieldNeighborhood = (displayFieldNeighborhood + 1) % Parameters.NUM_NEIGHBORHOODS;
                }
                else
                {
                   displayField = false;
                }
-               int n = Morphogen.NEIGHBORHOOD_DIMENSION * Morphogen.NEIGHBORHOOD_DIMENSION;
+               int n = Parameters.NEIGHBORHOOD_DIMENSION * Parameters.NEIGHBORHOOD_DIMENSION;
                for (int i = 0; i < n; i++)
                {
                   displaySectorTypeDensity[i] = false;
@@ -510,8 +509,7 @@ public class Morphozoic extends JFrame implements Runnable
    public static void main(String[] args)
    {
       String usage        = "Usage: java morphozoic.Morphozoic\n\t[-organism morphozoic.applications.<Organism class name>]" + OPTIONS + "\n\t[organism-specific options]";
-      String organismName = Organism.DEFAULT_ORGANISM;
-      int    randomSeed   = Organism.DEFAULT_RANDOM_SEED;
+      String organismName = Parameters.DEFAULT_ORGANISM;
 
       // Get arguments.
       Vector<String> argsVector = new Vector<String>();
@@ -585,7 +583,7 @@ public class Morphozoic extends JFrame implements Runnable
                System.err.println(usage);
                return;
             }
-            Organism.DIMENSIONS = new Dimension(w, h);
+            Parameters.ORGANISM_DIMENSIONS = new Dimension(w, h);
          }
          else if (args[i].equals("-numCellTypes"))
          {
@@ -595,8 +593,8 @@ public class Morphozoic extends JFrame implements Runnable
                System.err.println(usage);
                return;
             }
-            Cell.NUM_TYPES = Integer.parseInt(args[i]);
-            if (Cell.NUM_TYPES <= 0)
+            Parameters.NUM_CELL_TYPES = Integer.parseInt(args[i]);
+            if (Parameters.NUM_CELL_TYPES <= 0)
             {
                System.err.println("Number of cell types must be positive");
                System.err.println(usage);
@@ -611,8 +609,8 @@ public class Morphozoic extends JFrame implements Runnable
                System.err.println(usage);
                return;
             }
-            Morphogen.NEIGHBORHOOD_DIMENSION = Integer.parseInt(args[i]);
-            if ((Morphogen.NEIGHBORHOOD_DIMENSION <= 0) || ((Morphogen.NEIGHBORHOOD_DIMENSION % 2) != 1))
+            Parameters.NEIGHBORHOOD_DIMENSION = Integer.parseInt(args[i]);
+            if ((Parameters.NEIGHBORHOOD_DIMENSION <= 0) || ((Parameters.NEIGHBORHOOD_DIMENSION % 2) != 1))
             {
                System.err.println("Neighborhood dimension must be positive odd number");
                System.err.println(usage);
@@ -627,15 +625,15 @@ public class Morphozoic extends JFrame implements Runnable
                System.err.println(usage);
                return;
             }
-            Morphogen.NUM_NEIGHBORHOODS = Integer.parseInt(args[i]);
-            if (Morphogen.NUM_NEIGHBORHOODS <= 0)
+            Parameters.NUM_NEIGHBORHOODS = Integer.parseInt(args[i]);
+            if (Parameters.NUM_NEIGHBORHOODS <= 0)
             {
                System.err.println("Number of neighborhoods must be positive");
                System.err.println(usage);
                return;
             }
          }
-         else if (args[i].equals("-morphogeneticDispersionModulo"))
+         else if (args[i].equals("-morphogeneticCellDispersion"))
          {
             i++;
             if (i == args.length)
@@ -643,10 +641,10 @@ public class Morphozoic extends JFrame implements Runnable
                System.err.println(usage);
                return;
             }
-            Organism.MORPHOGENETIC_DISPERSION_MODULO = Integer.parseInt(args[i]);
-            if (Morphogen.NUM_NEIGHBORHOODS <= 0)
+            Parameters.MORPHOGENETIC_DISPERSION_MODULO = Integer.parseInt(args[i]);
+            if (Parameters.MORPHOGENETIC_DISPERSION_MODULO < 1)
             {
-               System.err.println("Morphogenetic dispersion modulo must be positive");
+               System.err.println("Morphogenetic cell dispersion must be positive");
                System.err.println(usage);
                return;
             }
@@ -659,7 +657,7 @@ public class Morphozoic extends JFrame implements Runnable
                System.err.println(usage);
                return;
             }
-            randomSeed = Integer.parseInt(args[i]);
+            Parameters.RANDOM_SEED = Integer.parseInt(args[i]);
          }
          else if (args[i].equals("-help"))
          {
@@ -679,7 +677,7 @@ public class Morphozoic extends JFrame implements Runnable
       }
       try
       {
-         new Morphozoic(organismName, organismArgs, randomSeed);
+         new Morphozoic(organismName, organismArgs);
       }
       catch (Exception e) {
          System.err.println(e.getMessage());

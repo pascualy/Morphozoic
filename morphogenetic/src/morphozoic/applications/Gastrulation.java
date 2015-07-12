@@ -12,6 +12,7 @@ import java.util.Random;
 import morphozoic.Cell;
 import morphozoic.Metamorph;
 import morphozoic.Organism;
+import morphozoic.Parameters;
 
 // Gastrulation.
 public class Gastrulation extends Organism
@@ -22,13 +23,12 @@ public class Gastrulation extends Organism
    public static final String OPTIONS = "\n\t[-genMetamorphs <save file name>]\n\t[-execMetamorphs <load file name>]";
 
    // Constructor.
-   public Gastrulation(String[] args, Integer randomSeed) throws IllegalArgumentException, IOException
+   public Gastrulation(String[] args, Integer id) throws IllegalArgumentException, IOException
    {
       String usage = "Usage: java morphozoic.Morphozoic\n\t[-organism " + ORGANISM_NAME + "]" + morphozoic.Morphozoic.OPTIONS + OPTIONS;
 
       // Random numbers.
-      this.randomSeed = randomSeed;
-      randomizer      = new Random(randomSeed);
+      randomizer = new Random(Parameters.RANDOM_SEED);
 
       // Get arguments.
       for (int i = 0; i < args.length; i++)
@@ -71,7 +71,7 @@ public class Gastrulation extends Organism
          try
          {
             writer = new DataOutputStream(new FileOutputStream(genFilename));
-            saveParms(writer);
+            Parameters.saveParms(writer);
          }
          catch (Exception e)
          {
@@ -86,7 +86,7 @@ public class Gastrulation extends Organism
          try
          {
             reader = new DataInputStream(new FileInputStream(execFilename));
-            loadParms(reader);
+            Parameters.loadParms(reader);
             Metamorph m;
             while ((m = Metamorph.load(reader)) != null)
             {
@@ -118,8 +118,8 @@ public class Gastrulation extends Organism
       if ((execFilename == null) || (tick == 0))
       {
          // Force update.
-         x = DIMENSIONS.width / 2;
-         y = DIMENSIONS.height / 2;
+         x = Parameters.ORGANISM_DIMENSIONS.width / 2;
+         y = Parameters.ORGANISM_DIMENSIONS.height / 2;
          if (tick < 9)
          {
             s  = (tick * 2) + 1;
@@ -128,7 +128,7 @@ public class Gastrulation extends Organism
             {
                for (x2 = 0; x2 < s; x2++)
                {
-                  cells[x + x2 - s2][y + y2 - s2].type = randomizer.nextInt(Cell.NUM_TYPES);
+                  cells[x + x2 - s2][y + y2 - s2].type = randomizer.nextInt(Parameters.NUM_CELL_TYPES);
                }
             }
             s -= 2;
@@ -147,7 +147,7 @@ public class Gastrulation extends Organism
             int t = (9 - tick) + 7;
             for (x2 = x - 3; x2 < s; x2++)
             {
-               cells[x2][y - t].type = randomizer.nextInt(Cell.NUM_TYPES);
+               cells[x2][y - t].type = randomizer.nextInt(Parameters.NUM_CELL_TYPES);
             }
             s = x + 3;
             t++;

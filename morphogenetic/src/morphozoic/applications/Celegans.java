@@ -21,6 +21,7 @@ import morphozoic.Cell;
 import morphozoic.Metamorph;
 import morphozoic.Organism;
 import morphozoic.Orientation;
+import morphozoic.Parameters;
 
 // C elegans morphogenesis.
 public class Celegans extends Organism
@@ -39,13 +40,12 @@ public class Celegans extends Organism
    public int              morphSequenceIndex;
 
    // Constructor.
-   public Celegans(String[] args, Integer randomSeed) throws IllegalArgumentException, IOException
+   public Celegans(String[] args, Integer id) throws IllegalArgumentException, IOException
    {
       String usage = "Usage: java morphozoic.Morphozoic\n\t[-organism " + ORGANISM_NAME + "]" + morphozoic.Morphozoic.OPTIONS + OPTIONS;
 
       // Random numbers.
-      this.randomSeed = randomSeed;
-      randomizer      = new Random(randomSeed);
+      randomizer = new Random(Parameters.RANDOM_SEED);
 
       // Get arguments.
       boolean morphFile = false;
@@ -108,9 +108,9 @@ public class Celegans extends Organism
          if (morphSequenceIndex >= 0)
          {
             Cell[][] morphCells = (Cell[][])morphSequence.get(morphSequenceIndex);
-            for (int x = 0; x < DIMENSIONS.width; x++)
+            for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
             {
-               for (int y = 0; y < DIMENSIONS.height; y++)
+               for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
                {
                   cells[x][y] = morphCells[x][y];
                }
@@ -127,7 +127,7 @@ public class Celegans extends Organism
          try
          {
             writer = new DataOutputStream(new FileOutputStream(genFilename));
-            saveParms(writer);
+            Parameters.saveParms(writer);
          }
          catch (Exception e)
          {
@@ -142,12 +142,12 @@ public class Celegans extends Organism
          try
          {
             reader = new DataInputStream(new FileInputStream(execFilename));
-            loadParms(reader);
+            Parameters.loadParms(reader);
             int     x, y;
             boolean eof = false;
-            for (x = 0; x < DIMENSIONS.width; x++)
+            for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
             {
-               for (y = 0; y < DIMENSIONS.height; y++)
+               for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
                {
                   cells[x][y].type = Cell.EMPTY;
                }
@@ -254,9 +254,9 @@ public class Celegans extends Organism
 
       // Create cell sequence from image sequence.
       morphSequence = new Vector<Cell[][]>();
-      int   w = Organism.DIMENSIONS.width;
-      int   h = Organism.DIMENSIONS.height;
-      float q = 256.0f / (float)Cell.NUM_TYPES;
+      int   w = Parameters.ORGANISM_DIMENSIONS.width;
+      int   h = Parameters.ORGANISM_DIMENSIONS.height;
+      float q = 256.0f / (float)Parameters.NUM_CELL_TYPES;
       for (Image i : images)
       {
          Image         s = i.getScaledInstance(w, h, Image.SCALE_DEFAULT);
@@ -271,9 +271,9 @@ public class Celegans extends Organism
             {
                int cy = (h - 1) - y;
                int t  = (int)((float)(b.getRGB(x, y) & 0xFF) / q);
-               if (t >= Cell.NUM_TYPES)
+               if (t >= Parameters.NUM_CELL_TYPES)
                {
-                  t = Cell.NUM_TYPES - 1;
+                  t = Parameters.NUM_CELL_TYPES - 1;
                }
                c[x][cy] = new Cell(t, x, cy, Orientation.NORTH, this);
             }
@@ -304,9 +304,9 @@ public class Celegans extends Organism
       {
          try
          {
-            for (x = 0; x < DIMENSIONS.width; x++)
+            for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
             {
-               for (y = 0; y < DIMENSIONS.height; y++)
+               for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
                {
                   if (predecessorCells[x][y].type != Cell.EMPTY)
                   {
@@ -331,9 +331,9 @@ public class Celegans extends Organism
          if (morphSequenceIndex >= 0)
          {
             Cell[][] morphCells = (Cell[][])morphSequence.get(morphSequenceIndex);
-            for (x = 0; x < DIMENSIONS.width; x++)
+            for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
             {
-               for (y = 0; y < DIMENSIONS.height; y++)
+               for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
                {
                   cells[x][y] = morphCells[x][y];
                }

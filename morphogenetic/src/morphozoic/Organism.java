@@ -2,31 +2,19 @@
 
 package morphozoic;
 
-import java.awt.Dimension;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 import java.util.Vector;
 
 // Organism.
 public class Organism
 {
-   // Default organism.
-   public static final String DEFAULT_ORGANISM = "morphozoic.applications.Gastrulation";
-
-   // Random seed.
-   public static final int DEFAULT_RANDOM_SEED = 4517;
-   public int              randomSeed          = DEFAULT_RANDOM_SEED;
-   public Random           randomizer;
-
-   // Dimensions in cell units.
-   public static final Dimension DEFAULT_DIMENSIONS = new Dimension(50, 50);
-   public static Dimension       DIMENSIONS         = DEFAULT_DIMENSIONS;
-
-   // Morphogenetic locale dispersion.
-   public static final int DEFAULT_MORPHOGENETIC_DISPERSION_MODULO = 1;
-   public static int       MORPHOGENETIC_DISPERSION_MODULO         = DEFAULT_MORPHOGENETIC_DISPERSION_MODULO;
+   // Random numbers.
+   public Random randomizer;
 
    // Cells.
    public Cell[][] cells;
@@ -52,9 +40,8 @@ public class Organism
    public DataInputStream  reader;
 
    // Constructors.
-   public Organism(String[] args, Integer randomSeed)
+   public Organism(String[] args, Integer id)
    {
-      this.randomSeed = randomSeed;
       init();
    }
 
@@ -71,19 +58,19 @@ public class Organism
       int x, y;
 
       // Random numbers.
-      randomizer = new Random(randomSeed);
+      randomizer = new Random(Parameters.RANDOM_SEED);
 
       // Create cells.
-      cells = new Cell[DIMENSIONS.width][DIMENSIONS.height];
-      for (x = 0; x < DIMENSIONS.width; x++)
+      cells = new Cell[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
+      for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
       {
-         for (y = 0; y < DIMENSIONS.height; y++)
+         for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
          {
             cells[x][y] = new Cell(Cell.EMPTY, x, y, Orientation.NORTH, this);
          }
       }
 
-      predecessorCells = new Cell[DIMENSIONS.width][DIMENSIONS.height];
+      predecessorCells = new Cell[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
       metamorphs       = new Vector<Metamorph>();
       tick             = 0;
    }
@@ -92,7 +79,7 @@ public class Organism
    // Wrap x coordinate.
    public static int wrapX(int x)
    {
-      int w = DIMENSIONS.width;
+      int w = Parameters.ORGANISM_DIMENSIONS.width;
 
       while (x < 0) { x += w; }
       while (x >= w) { x -= w; }
@@ -103,7 +90,7 @@ public class Organism
    // Wrap y coordinate.
    public static int wrapY(int y)
    {
-      int h = DIMENSIONS.height;
+      int h = Parameters.ORGANISM_DIMENSIONS.height;
 
       while (y < 0) { y += h; }
       while (y >= h) { y -= h; }
@@ -125,9 +112,9 @@ public class Organism
       int x, y;
 
       // Generate morphogenetic fields.
-      for (x = 0; x < DIMENSIONS.width; x++)
+      for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
       {
-         for (y = 0; y < DIMENSIONS.height; y++)
+         for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
          {
             if ((cells[x][y].type != Cell.EMPTY) && morphogeneticLocale(x, y))
             {
@@ -141,70 +128,14 @@ public class Organism
       }
 
       // Create predecessor cells.
-      for (x = 0; x < DIMENSIONS.width; x++)
+      for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
       {
-         for (y = 0; y < DIMENSIONS.height; y++)
+         for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
          {
             predecessorCells[x][y]           = cells[x][y].clone();
             predecessorCells[x][y].morphogen = cells[x][y].morphogen;
             cells[x][y].morphogen            = null;
          }
-      }
-   }
-
-
-   // Save parameters.
-   public void saveParms(DataOutputStream writer) throws IOException
-   {
-      writer.writeInt(Cell.NUM_TYPES);
-      writer.writeInt(Morphogen.NEIGHBORHOOD_DIMENSION);
-      writer.writeInt(Morphogen.NUM_NEIGHBORHOODS);
-      writer.writeInt(Organism.DIMENSIONS.width);
-      writer.writeInt(Organism.DIMENSIONS.height);
-      writer.writeInt(Organism.MORPHOGENETIC_DISPERSION_MODULO);
-      writer.flush();
-   }
-
-
-   // Load parameters.
-   public void loadParms(DataInputStream reader) throws IOException
-   {
-      int n = reader.readInt();
-
-      if (n != Cell.NUM_TYPES)
-      {
-         throw new IOException("Cell numTypes (" + n + ") in file " + execFilename +
-                               " must equal cell numTypes (" + Cell.NUM_TYPES + ")");
-      }
-      n = reader.readInt();
-      if (n != Morphogen.NEIGHBORHOOD_DIMENSION)
-      {
-         throw new IOException("Morphogen neighborhoodDimension (" + n + ") in file " + execFilename +
-                               " must equal neighborhoodDimension (" + Morphogen.NEIGHBORHOOD_DIMENSION + ")");
-      }
-      n = reader.readInt();
-      if (n != Morphogen.NUM_NEIGHBORHOODS)
-      {
-         throw new IOException("Morphogen numNeighborhoods (" + n + ") in file " + execFilename +
-                               " must equal numNeighborhoods (" + Morphogen.NUM_NEIGHBORHOODS + ")");
-      }
-      n = reader.readInt();
-      if (n != Organism.DIMENSIONS.width)
-      {
-         throw new IOException("Organism dimensions width (" + n + ") in file " + execFilename +
-                               " must equal dimensions width (" + Organism.DIMENSIONS.width + ")");
-      }
-      n = reader.readInt();
-      if (n != Organism.DIMENSIONS.height)
-      {
-         throw new IOException("Organism dimensions height (" + n + ") in file " + execFilename +
-                               " must equal dimensions height (" + Organism.DIMENSIONS.height + ")");
-      }
-      n = reader.readInt();
-      if (n != Organism.MORPHOGENETIC_DISPERSION_MODULO)
-      {
-         throw new IOException("Organism morphogeneticDispersionModulo (" + n + ") in file " + execFilename +
-                               " must equal morphogeneticDispersionModulo (" + Organism.MORPHOGENETIC_DISPERSION_MODULO + ")");
       }
    }
 
@@ -216,9 +147,9 @@ public class Organism
 
       try
       {
-         for (x = 0; x < DIMENSIONS.width; x++)
+         for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
          {
-            for (y = 0; y < DIMENSIONS.height; y++)
+            for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
             {
                if (predecessorCells[x][y].type != Cell.EMPTY)
                {
@@ -255,112 +186,187 @@ public class Organism
 
 
    // Metamorph morphogen distance.
-   public class MetamorphDistance
+   public class MetamorphDistance implements Comparable<MetamorphDistance>
    {
-      public float     morphogenDistance;
       public Metamorph metamorph;
-      public boolean   mark;
+      public Float     morphogenDistance;
 
-      public MetamorphDistance(float d, Metamorph m)
+      public MetamorphDistance(Metamorph m, float d)
       {
-         morphogenDistance = d;
          metamorph         = m;
-         mark = false;
+         morphogenDistance = d;
+      }
+
+
+      // For descending order sort by morphogen distance.
+      public int compareTo(MetamorphDistance other)
+      {
+         float d = other.morphogenDistance - morphogenDistance;
+
+         if (d < 0.0f)
+         {
+            return(-1);
+         }
+         else if (d > 0.0f)
+         {
+            return(1);
+         }
+         else
+         {
+            return(0);
+         }
+      }
+   }
+
+   // Cell metamorphs.
+   public class CellMetamorphs
+   {
+      public ArrayList<MetamorphDistance> morphs;
+      public boolean mark;
+
+      public CellMetamorphs()
+      {
+         morphs = new ArrayList<MetamorphDistance>();
+         mark   = false;
+      }
+
+
+      public void add(Metamorph m, float d)
+      {
+         morphs.add(new MetamorphDistance(m, d));
+         Collections.sort(morphs);
+         while (morphs.size() > Parameters.MAX_CELL_METAMORPHS)
+         {
+            morphs.remove(0);
+         }
+      }
+
+
+      public void clear()
+      {
+         morphs.clear();
       }
    }
 
    // Execute metamorphs.
    public void execMetamorphs()
    {
-      int x, y, x2, y2;
+      int x, y, x2, y2, n;
 
       // Match metamorphs to cell morphogens.
-      MetamorphDistance cellMorphs[][] = new MetamorphDistance[DIMENSIONS.width][DIMENSIONS.height];
+      CellMetamorphs[][] cellMorphs =
+         new CellMetamorphs[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
 
-      for (x = 0; x < DIMENSIONS.width; x++)
+      if (((n = metamorphs.size()) > 0) && (Parameters.MAX_CELL_METAMORPHS > 0))
       {
-         for (y = 0; y < DIMENSIONS.height; y++)
+         for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
          {
-            if ((predecessorCells[x][y].type != Cell.EMPTY) && morphogeneticLocale(x, y))
+            for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
             {
-               float dist = 0.0f;
-               for (Metamorph m : metamorphs)
+               if ((predecessorCells[x][y].type != Cell.EMPTY) && morphogeneticLocale(x, y))
                {
-                  float d = predecessorCells[x][y].morphogen.compare(m.morphogen);
-                  if ((cellMorphs[x][y] == null) || (d < dist))
+                  for (int i = 0, j = randomizer.nextInt(n); i < n; i++, j = (j + 1) % n)
                   {
-                     cellMorphs[x][y] = new MetamorphDistance(d, m);
-                     dist             = d;
-                  }
-               }
-            }
-         }
-      }
-
-      // Morphs with better morphogen matches eliminate competing morphs.
-      boolean active = true;
-      while (active)
-      {
-         active = false;
-         float     dist  = -1.0f;
-         Metamorph morph = null;
-         int       cx    = 0;
-         int       cy    = 0;
-         for (x = 0, x2 = randomizer.nextInt(DIMENSIONS.width); x < DIMENSIONS.width; x++)
-         {
-            for (y = 0, y2 = randomizer.nextInt(DIMENSIONS.height); y < DIMENSIONS.height; y++)
-            {
-               MetamorphDistance m = cellMorphs[x2][y2];
-               if ((m != null) && !m.mark)
-               {
-                  if ((dist < 0.0f) || (m.morphogenDistance < dist))
-                  {
-                     dist  = m.morphogenDistance;
-                     morph = m.metamorph;
-                     cx    = x2;
-                     cy    = y2;
-                  }
-               }
-               y2 = (y2 + 1) % DIMENSIONS.height;
-            }
-            x2 = (x2 + 1) % DIMENSIONS.width;
-         }
-         if (morph != null)
-         {
-            Morphogen morphogen = morph.morphogen;
-            for (x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
-            {
-               for (y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
-               {
-                  x2 = wrapX(cx + morphogen.sourceCells[x][y].x);
-                  y2 = wrapY(cy + morphogen.sourceCells[x][y].y);
-                  if ((x2 != cx) || (y2 != cy))
-                  {
-                     if ((morphogen.sourceCells[x][y].type != predecessorCells[x2][y2].type) ||
-                         (morphogen.sourceCells[x][y].orientation != predecessorCells[x2][y2].orientation))
+                     Metamorph m = metamorphs.get(j);
+                     float     d = predecessorCells[x][y].morphogen.compare(m.morphogen);
+                     if (d <= Parameters.MAX_MORPHOGEN_COMPARE_DISTANCE)
                      {
-                        cellMorphs[x2][y2] = null;
+                        if (cellMorphs[x][y] == null)
+                        {
+                           cellMorphs[x][y] = new CellMetamorphs();
+                        }
+                        cellMorphs[x][y].add(m, d);
                      }
                   }
                }
             }
-            cellMorphs[cx][cy].mark = true;
-            active = true;
          }
       }
 
-      // Execute metamorphs from worse to better morphogen match.
-      for (x = 0; x < DIMENSIONS.width; x++)
+      // Probabilistically choose neighborhood matching morphogen,
+      for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
       {
-         for (y = 0; y < DIMENSIONS.height; y++)
+         for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
          {
-            MetamorphDistance m = cellMorphs[x][y];
+            if (cellMorphs[x][y] != null)
+            {
+               chooseMetamorph(cellMorphs[x][y].morphs);
+            }
+         }
+      }
+
+      // Morphs with better morphogen matches inhibit competing morphs?
+      boolean active = true;
+      if (Parameters.INHIBIT_COMPETING_MORPHOGENS)
+      {
+         while (active)
+         {
+            active = false;
+            float     dist  = -1.0f;
+            Metamorph morph = null;
+            int       cx    = 0;
+            int       cy    = 0;
+            for (x = 0, x2 = randomizer.nextInt(Parameters.ORGANISM_DIMENSIONS.width);
+                 x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+            {
+               for (y = 0, y2 = randomizer.nextInt(Parameters.ORGANISM_DIMENSIONS.height);
+                    y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+               {
+                  CellMetamorphs m = cellMorphs[x2][y2];
+                  if ((m != null) && !m.mark)
+                  {
+                     float d = m.morphs.get(0).morphogenDistance;
+                     if ((dist < 0.0f) || (d < dist))
+                     {
+                        dist  = d;
+                        morph = m.morphs.get(0).metamorph;
+                        cx    = x2;
+                        cy    = y2;
+                     }
+                  }
+                  y2 = (y2 + 1) % Parameters.ORGANISM_DIMENSIONS.height;
+               }
+               x2 = (x2 + 1) % Parameters.ORGANISM_DIMENSIONS.width;
+            }
+            if (morph != null)
+            {
+               Morphogen morphogen = morph.morphogen;
+               for (x = 0; x < Parameters.NEIGHBORHOOD_DIMENSION; x++)
+               {
+                  for (y = 0; y < Parameters.NEIGHBORHOOD_DIMENSION; y++)
+                  {
+                     x2 = wrapX(cx + morphogen.sourceCells[x][y].x);
+                     y2 = wrapY(cy + morphogen.sourceCells[x][y].y);
+                     if ((x2 != cx) || (y2 != cy))
+                     {
+                        if ((morphogen.sourceCells[x][y].type != predecessorCells[x2][y2].type) ||
+                            (morphogen.sourceCells[x][y].orientation != predecessorCells[x2][y2].orientation))
+                        {
+                           cellMorphs[x2][y2] = null;
+                        }
+                     }
+                  }
+               }
+               cellMorphs[cx][cy].mark = true;
+               active = true;
+            }
+         }
+      }
+
+      // Execute metamorphs.
+      for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+      {
+         for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+         {
+            CellMetamorphs m = cellMorphs[x][y];
             if (m != null)
             {
                m.mark = false;
             }
          }
       }
+      Metamorph.CellPropsList[][] cellPropsMorphs =
+         new Metamorph.CellPropsList[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
       active = true;
       while (active)
       {
@@ -369,30 +375,77 @@ public class Organism
          Metamorph morph = null;
          int       cx    = 0;
          int       cy    = 0;
-         for (x = 0, x2 = randomizer.nextInt(DIMENSIONS.width); x < DIMENSIONS.width; x++)
+         for (x = 0, x2 = randomizer.nextInt(Parameters.ORGANISM_DIMENSIONS.width);
+              x < Parameters.ORGANISM_DIMENSIONS.width; x++)
          {
-            for (y = 0, y2 = randomizer.nextInt(DIMENSIONS.height); y < DIMENSIONS.height; y++)
+            for (y = 0, y2 = randomizer.nextInt(Parameters.ORGANISM_DIMENSIONS.height);
+                 y < Parameters.ORGANISM_DIMENSIONS.height; y++)
             {
-               MetamorphDistance m = cellMorphs[x2][y2];
+               CellMetamorphs m = cellMorphs[x2][y2];
                if ((m != null) && !m.mark)
                {
-                  if ((dist < 0.0f) || (m.morphogenDistance > dist))
+                  float d = m.morphs.get(0).morphogenDistance;
+                  if ((dist < 0.0f) || (d > dist))
                   {
-                     dist  = m.morphogenDistance;
-                     morph = m.metamorph;
+                     dist  = d;
+                     morph = m.morphs.get(0).metamorph;
                      cx    = x2;
                      cy    = y2;
                   }
                }
-               y2 = (y2 + 1) % DIMENSIONS.height;
+               y2 = (y2 + 1) % Parameters.ORGANISM_DIMENSIONS.height;
             }
-            x2 = (x2 + 1) % DIMENSIONS.width;
+            x2 = (x2 + 1) % Parameters.ORGANISM_DIMENSIONS.width;
          }
          if (morph != null)
          {
-            morph.exec(cells[cx][cy]);
+            morph.addCellProps(cellPropsMorphs, cx, cy, dist);
             cellMorphs[cx][cy].mark = true;
             active = true;
+         }
+      }
+      for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+      {
+         for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+         {
+            if (cellPropsMorphs[x][y] != null)
+            {
+               Metamorph.exec(cells[x][y], cellPropsMorphs, randomizer);
+            }
+         }
+      }
+   }
+
+
+   // Weighted choice of metamorph by morphogen distance.
+   private void chooseMetamorph(ArrayList<MetamorphDistance> metamorphs)
+   {
+      int n = metamorphs.size();
+
+      float[] weights = new float[n];
+      float sum = 0.0f;
+      Collections.reverse(metamorphs);
+      for (int i = 0; i < n; i++)
+      {
+         MetamorphDistance m = metamorphs.get(i);
+         weights[i] = m.morphogenDistance + Parameters.MORPHOGEN_DISTANCE_BIAS;
+         sum       += weights[i];
+      }
+      if (sum > 0.0f)
+      {
+         for (int i = 0; i < n; i++)
+         {
+            weights[i] = (sum - weights[i]) / sum;
+         }
+         MetamorphDistance m = metamorphs.get(0);
+         for (int i = 0; i < n; i++)
+         {
+            if (randomizer.nextFloat() < weights[i]) { break; }
+            metamorphs.remove(0);
+         }
+         if (metamorphs.size() == 0)
+         {
+            metamorphs.add(m);
          }
       }
    }
@@ -401,8 +454,8 @@ public class Organism
    // Is a morphogenetic field centered at this locale?
    public boolean morphogeneticLocale(int x, int y)
    {
-      if (((x % MORPHOGENETIC_DISPERSION_MODULO) == 0) &&
-          ((y % MORPHOGENETIC_DISPERSION_MODULO) == 0))
+      if (((x % Parameters.MORPHOGENETIC_DISPERSION_MODULO) == 0) &&
+          ((y % Parameters.MORPHOGENETIC_DISPERSION_MODULO) == 0))
       {
          return(true);
       }

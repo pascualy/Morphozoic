@@ -21,15 +21,6 @@ public class Morphogen
    // Source cell configuration.
    public Cell[][] sourceCells;
 
-   // Neighborhoods.
-   public static final int     DEFAULT_NUM_NEIGHBORHOODS = 3;
-   public static int           NUM_NEIGHBORHOODS         = DEFAULT_NUM_NEIGHBORHOODS;
-   public Vector<Neighborhood> neighborhoods;
-
-   // Neighborhood dimension: odd number.
-   public static final int DEFAULT_NEIGHBORHOOD_DIMENSION = 3;
-   public static int       NEIGHBORHOOD_DIMENSION         = DEFAULT_NEIGHBORHOOD_DIMENSION;
-
    // Neighborhood.
    public class Neighborhood
    {
@@ -44,7 +35,7 @@ public class Morphogen
             this.dx       = dx;
             this.dy       = dy;
             this.d        = d;
-            typeDensities = new float[Cell.NUM_TYPES];
+            typeDensities = new float[Parameters.NUM_CELL_TYPES];
          }
 
 
@@ -64,7 +55,7 @@ public class Morphogen
 
       public Neighborhood()
       {
-         sectors = new Sector[NEIGHBORHOOD_DIMENSION * NEIGHBORHOOD_DIMENSION];
+         sectors = new Sector[Parameters.NEIGHBORHOOD_DIMENSION * Parameters.NEIGHBORHOOD_DIMENSION];
       }
 
 
@@ -83,6 +74,9 @@ public class Morphogen
       }
    }
 
+   // Neighborhoods.
+   public Vector<Neighborhood> neighborhoods;
+
    // Hash code.
    public int hashCode;
 
@@ -90,14 +84,14 @@ public class Morphogen
    public Morphogen(Cell cell)
    {
       // Create source cell configuration.
-      sourceCells    = new Cell[Morphogen.NEIGHBORHOOD_DIMENSION][Morphogen.NEIGHBORHOOD_DIMENSION];
+      sourceCells    = new Cell[Parameters.NEIGHBORHOOD_DIMENSION][Parameters.NEIGHBORHOOD_DIMENSION];
       Cell[][] cells = cell.organism.cells;
-      int o  = Morphogen.NEIGHBORHOOD_DIMENSION / 2;
+      int o  = Parameters.NEIGHBORHOOD_DIMENSION / 2;
       int cx = cell.x - o;
       int cy = cell.y - o;
-      for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
+      for (int x = 0; x < Parameters.NEIGHBORHOOD_DIMENSION; x++)
       {
-         for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
+         for (int y = 0; y < Parameters.NEIGHBORHOOD_DIMENSION; y++)
          {
             int x2 = Organism.wrapX(cx + x);
             int y2 = Organism.wrapY(cy + y);
@@ -109,7 +103,7 @@ public class Morphogen
 
       // Create neighborhoods.
       neighborhoods = new Vector<Neighborhood>();
-      for (int i = 0; i < NUM_NEIGHBORHOODS; i++)
+      for (int i = 0; i < Parameters.NUM_NEIGHBORHOODS; i++)
       {
          neighborhoods.add(generateNeighborhood(cell, i));
       }
@@ -133,18 +127,18 @@ public class Morphogen
       Neighborhood neighborhood = new Neighborhood();
 
       Cell[][] cells = cell.organism.cells;
-      int   d  = (int)Math.pow((double)NEIGHBORHOOD_DIMENSION, (double)neighborhoodNum);
+      int   d  = (int)Math.pow((double)Parameters.NEIGHBORHOOD_DIMENSION, (double)neighborhoodNum);
       float d2 = (float)(d * d);
-      int   o  = (d * NEIGHBORHOOD_DIMENSION) / 2;
+      int   o  = (d * Parameters.NEIGHBORHOOD_DIMENSION) / 2;
       int   x  = cell.x - o;
       int   y  = cell.y - o;
-      for (int y1 = 0, b = 0; y1 < NEIGHBORHOOD_DIMENSION; y1++)
+      for (int y1 = 0, b = 0; y1 < Parameters.NEIGHBORHOOD_DIMENSION; y1++)
       {
-         for (int x1 = 0; x1 < NEIGHBORHOOD_DIMENSION; x1++)
+         for (int x1 = 0; x1 < Parameters.NEIGHBORHOOD_DIMENSION; x1++)
          {
             int x2  = x + (x1 * d);
             int y2  = y + (y1 * d);
-            int t[] = new int[Cell.NUM_TYPES];
+            int t[] = new int[Parameters.NUM_CELL_TYPES];
             for (int y3 = 0; y3 < d; y3++)
             {
                for (int x3 = 0; x3 < d; x3++)
@@ -158,7 +152,7 @@ public class Morphogen
                }
             }
             Neighborhood.Sector sector = neighborhood.addSector(b++, x2 - cell.x, y2 - cell.y, d);
-            for (int i = 0; i < Cell.NUM_TYPES; i++)
+            for (int i = 0; i < Parameters.NUM_CELL_TYPES; i++)
             {
                sector.setTypeDensity(i, (float)t[i] / d2);
             }
@@ -173,13 +167,13 @@ public class Morphogen
    {
       Random r = new Random(65);
 
-      for (int i = 0; i < NUM_NEIGHBORHOODS; i++)
+      for (int i = 0; i < Parameters.NUM_NEIGHBORHOODS; i++)
       {
          Neighborhood neighborhood = neighborhoods.get(i);
          for (int j = 0; j < neighborhood.sectors.length; j++)
          {
             Neighborhood.Sector sector = neighborhood.getSector(j);
-            for (int k = 0; k < Cell.NUM_TYPES; k++)
+            for (int k = 0; k < Parameters.NUM_CELL_TYPES; k++)
             {
                int   h = r.nextInt();
                float d = sector.getTypeDensity(k);
@@ -211,19 +205,29 @@ public class Morphogen
       {
          return(0.0f);
       }
-      for (int i = 0; i < NUM_NEIGHBORHOODS; i++)
+      for (int i = 0; i < Parameters.NUM_NEIGHBORHOODS; i++)
       {
-         Neighborhood n1 = getNeighborhood(i);
-         Neighborhood n2 = morphogen.getNeighborhood(i);
+         Neighborhood n1     = getNeighborhood(i);
+         Neighborhood n2     = morphogen.getNeighborhood(i);
+         float        ndelta = 0.0f;
          for (int j = 0; j < n1.sectors.length; j++)
          {
             Neighborhood.Sector t1 = n1.sectors[j];
             Neighborhood.Sector t2 = n2.sectors[j];
             for (int k = 0; k < t1.typeDensities.length; k++)
             {
-               delta += Math.abs(t1.typeDensities[k] - t2.typeDensities[k]);
+               ndelta += Math.abs(t1.typeDensities[k] - t2.typeDensities[k]);
             }
          }
+         if (Parameters.NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS != null)
+         {
+            ndelta *= Parameters.NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS[i];
+         }
+         else
+         {
+            ndelta /= (float)Parameters.NUM_NEIGHBORHOODS;
+         }
+         delta += ndelta;
       }
       return(delta);
    }
@@ -246,9 +250,9 @@ public class Morphogen
    // Save.
    public void save(DataOutputStream writer) throws IOException
    {
-      for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
+      for (int x = 0; x < Parameters.NEIGHBORHOOD_DIMENSION; x++)
       {
-         for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
+         for (int y = 0; y < Parameters.NEIGHBORHOOD_DIMENSION; y++)
          {
             writer.writeInt(sourceCells[x][y].type);
             writer.writeInt(sourceCells[x][y].orientation.ordinal());
@@ -278,11 +282,11 @@ public class Morphogen
    {
       Morphogen m = new Morphogen();
 
-      m.sourceCells = new Cell[Morphogen.NEIGHBORHOOD_DIMENSION][Morphogen.NEIGHBORHOOD_DIMENSION];
-      int d = Morphogen.NEIGHBORHOOD_DIMENSION / 2;
-      for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
+      m.sourceCells = new Cell[Parameters.NEIGHBORHOOD_DIMENSION][Parameters.NEIGHBORHOOD_DIMENSION];
+      int d = Parameters.NEIGHBORHOOD_DIMENSION / 2;
+      for (int x = 0; x < Parameters.NEIGHBORHOOD_DIMENSION; x++)
       {
-         for (int y = 0; y < Morphogen.NEIGHBORHOOD_DIMENSION; y++)
+         for (int y = 0; y < Parameters.NEIGHBORHOOD_DIMENSION; y++)
          {
             int t = reader.readInt();
             int o = reader.readInt();
@@ -290,7 +294,7 @@ public class Morphogen
          }
       }
       m.neighborhoods = new Vector<Neighborhood>();
-      for (int i = 0; i < NUM_NEIGHBORHOODS; i++)
+      for (int i = 0; i < Parameters.NUM_NEIGHBORHOODS; i++)
       {
          Neighborhood n = m.new Neighborhood();
          m.neighborhoods.add(n);
@@ -300,7 +304,7 @@ public class Morphogen
             int dy = reader.readInt();
             d = reader.readInt();
             Neighborhood.Sector t = n.new Sector(dx, dy, d);
-            for (int k = 0; k < Cell.NUM_TYPES; k++)
+            for (int k = 0; k < Parameters.NUM_CELL_TYPES; k++)
             {
                t.setTypeDensity(k, reader.readFloat());
             }
@@ -317,9 +321,9 @@ public class Morphogen
    {
       System.out.println("Morphogen:");
       System.out.println("  Source cells:");
-      for (int y = Morphogen.NEIGHBORHOOD_DIMENSION - 1; y >= 0; y--)
+      for (int y = Parameters.NEIGHBORHOOD_DIMENSION - 1; y >= 0; y--)
       {
-         for (int x = 0; x < Morphogen.NEIGHBORHOOD_DIMENSION; x++)
+         for (int x = 0; x < Parameters.NEIGHBORHOOD_DIMENSION; x++)
          {
             if (sourceCells[x][y].type == Cell.EMPTY)
             {

@@ -13,6 +13,7 @@ import java.util.Random;
 import morphozoic.Cell;
 import morphozoic.Metamorph;
 import morphozoic.Organism;
+import morphozoic.Parameters;
 
 // Game of Life.
 public class GameOfLife extends Organism
@@ -23,13 +24,12 @@ public class GameOfLife extends Organism
    public static final String OPTIONS = "\n\t[-genMetamorphs <save file name>]\n\t[-execMetamorphs <load file name>]";
 
    // Constructor.
-   public GameOfLife(String[] args, Integer randomSeed) throws IllegalArgumentException, IOException
+   public GameOfLife(String[] args, Integer id) throws IllegalArgumentException, IOException
    {
       String usage = "Usage: java morphozoic.Morphozoic\n\t[-organism " + ORGANISM_NAME + "]" + morphozoic.Morphozoic.OPTIONS + OPTIONS;
 
       // Random numbers.
-      this.randomSeed = randomSeed;
-      randomizer      = new Random(randomSeed);
+      randomizer = new Random(Parameters.RANDOM_SEED);
 
       // Get arguments.
       for (int i = 0; i < args.length; i++)
@@ -72,7 +72,7 @@ public class GameOfLife extends Organism
          try
          {
             writer = new DataOutputStream(new FileOutputStream(genFilename));
-            saveParms(writer);
+            Parameters.saveParms(writer);
          }
          catch (Exception e)
          {
@@ -87,12 +87,12 @@ public class GameOfLife extends Organism
          try
          {
             reader = new DataInputStream(new FileInputStream(execFilename));
-            loadParms(reader);
+            Parameters.loadParms(reader);
             int     x, y;
             boolean eof = false;
-            for (x = 0; x < DIMENSIONS.width; x++)
+            for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
             {
-               for (y = 0; y < DIMENSIONS.height; y++)
+               for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
                {
                   cells[x][y].type = Cell.EMPTY;
                }
@@ -142,9 +142,9 @@ public class GameOfLife extends Organism
       {
          try
          {
-            for (int x = 0; x < DIMENSIONS.width; x++)
+            for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
             {
-               for (int y = 0; y < DIMENSIONS.height; y++)
+               for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
                {
                   if (predecessorCells[x][y].type != Cell.EMPTY)
                   {
@@ -193,9 +193,9 @@ public class GameOfLife extends Organism
       int x, y, x2, y2, w, h, count;
 
       // Clear cells.
-      for (x = 0; x < DIMENSIONS.width; x++)
+      for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
       {
-         for (y = 0; y < DIMENSIONS.height; y++)
+         for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
          {
             cells[x][y].type = Cell.EMPTY;
          }
@@ -205,16 +205,16 @@ public class GameOfLife extends Organism
       w = 1;
       h = 1;
 
-      for (x = 0; x < DIMENSIONS.width; x++)
+      for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
       {
-         for (y = 0; y < DIMENSIONS.height; y++)
+         for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
          {
             count = 0;
             x2    = x - w;
 
             while (x2 < 0)
             {
-               x2 += DIMENSIONS.width;
+               x2 += Parameters.ORGANISM_DIMENSIONS.width;
             }
 
             y2 = y;
@@ -228,7 +228,7 @@ public class GameOfLife extends Organism
 
             while (y2 < 0)
             {
-               y2 += DIMENSIONS.height;
+               y2 += Parameters.ORGANISM_DIMENSIONS.height;
             }
 
             if (predecessorCells[x2][y2].type != Cell.EMPTY)
@@ -238,9 +238,9 @@ public class GameOfLife extends Organism
 
             y2 = y + h;
 
-            while (y2 >= DIMENSIONS.height)
+            while (y2 >= Parameters.ORGANISM_DIMENSIONS.height)
             {
-               y2 -= DIMENSIONS.height;
+               y2 -= Parameters.ORGANISM_DIMENSIONS.height;
             }
 
             if (predecessorCells[x2][y2].type != Cell.EMPTY)
@@ -253,7 +253,7 @@ public class GameOfLife extends Organism
 
             while (y2 < 0)
             {
-               y2 += DIMENSIONS.height;
+               y2 += Parameters.ORGANISM_DIMENSIONS.height;
             }
 
             if (predecessorCells[x2][y2].type != Cell.EMPTY)
@@ -263,9 +263,9 @@ public class GameOfLife extends Organism
 
             y2 = y + h;
 
-            while (y2 >= DIMENSIONS.height)
+            while (y2 >= Parameters.ORGANISM_DIMENSIONS.height)
             {
-               y2 -= DIMENSIONS.height;
+               y2 -= Parameters.ORGANISM_DIMENSIONS.height;
             }
 
             if (predecessorCells[x2][y2].type != Cell.EMPTY)
@@ -275,9 +275,9 @@ public class GameOfLife extends Organism
 
             x2 = x + w;
 
-            while (x2 >= DIMENSIONS.width)
+            while (x2 >= Parameters.ORGANISM_DIMENSIONS.width)
             {
-               x2 -= DIMENSIONS.width;
+               x2 -= Parameters.ORGANISM_DIMENSIONS.width;
             }
 
             y2 = y;
@@ -291,7 +291,7 @@ public class GameOfLife extends Organism
 
             while (y2 < 0)
             {
-               y2 += DIMENSIONS.height;
+               y2 += Parameters.ORGANISM_DIMENSIONS.height;
             }
 
             if (predecessorCells[x2][y2].type != Cell.EMPTY)
@@ -301,9 +301,9 @@ public class GameOfLife extends Organism
 
             y2 = y + h;
 
-            while (y2 >= DIMENSIONS.height)
+            while (y2 >= Parameters.ORGANISM_DIMENSIONS.height)
             {
-               y2 -= DIMENSIONS.height;
+               y2 -= Parameters.ORGANISM_DIMENSIONS.height;
             }
 
 
