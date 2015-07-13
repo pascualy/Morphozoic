@@ -213,7 +213,7 @@ public class Metamorph
          for (int i = 0; i < n; i++)
          {
             CellProps m = morphs.get(i);
-            weights[i] = m.morphogenDistance + Parameters.MORPHOGEN_DISTANCE_BIAS;
+            weights[i] = m.morphogenDistance + Parameters.METAMORPH_RANDOM_BIAS;
             sum       += weights[i];
          }
          if (sum > 0.0f)

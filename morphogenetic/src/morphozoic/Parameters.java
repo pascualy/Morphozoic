@@ -44,10 +44,10 @@ public class Parameters
    public static final int DEFAULT_MAX_CELL_METAMORPHS = 3;
    public static int       MAX_CELL_METAMORPHS         = DEFAULT_MAX_CELL_METAMORPHS;
 
-   // Morphogen distance bias.
-   // For weighted metamorph selection.
-   public static final float DEFAULT_MORPHOGEN_DISTANCE_BIAS = 0.001f;
-   public static float       MORPHOGEN_DISTANCE_BIAS         = DEFAULT_MORPHOGEN_DISTANCE_BIAS;
+   // Metamorph selection randomness bias.
+   // 0 = least random.
+   public static final float DEFAULT_METAMORPH_RANDOM_BIAS = 0.001f;
+   public static float       METAMORPH_RANDOM_BIAS         = DEFAULT_METAMORPH_RANDOM_BIAS;
 
    // Probabilistically morph cells?
    public static final boolean DEFAULT_PROBABILISTIC_METAMORPH = true;
@@ -57,8 +57,8 @@ public class Parameters
    public static boolean INHIBIT_COMPETING_MORPHOGENS = true;
 
    // Morphogenetic cell dispersion.
-   public static final int DEFAULT_MORPHOGENETIC_DISPERSION_MODULO = 1;
-   public static int       MORPHOGENETIC_DISPERSION_MODULO         = DEFAULT_MORPHOGENETIC_DISPERSION_MODULO;
+   public static final int DEFAULT_MORPHOGENETIC_CELL_DISPERSION_MODULO = 1;
+   public static int       MORPHOGENETIC_CELL_DISPERSION_MODULO         = DEFAULT_MORPHOGENETIC_CELL_DISPERSION_MODULO;
 
    // Default organism.
    public static final String DEFAULT_ORGANISM = "morphozoic.applications.Gastrulation";
@@ -76,7 +76,7 @@ public class Parameters
       writer.writeInt(NEIGHBORHOOD_DIMENSION);
       writer.writeInt(METAMORPH_DIMENSION);
       writer.writeInt(NUM_NEIGHBORHOODS);
-      writer.writeInt(MORPHOGENETIC_DISPERSION_MODULO);
+      writer.writeInt(MORPHOGENETIC_CELL_DISPERSION_MODULO);
       writer.flush();
    }
 
@@ -116,9 +116,9 @@ public class Parameters
          throw new IOException("Morphogen number of neighborhoods (" + n + ") loaded must equal number of neighborhoods (" + NUM_NEIGHBORHOODS + ")");
       }
       n = reader.readInt();
-      if (n != MORPHOGENETIC_DISPERSION_MODULO)
+      if (n != MORPHOGENETIC_CELL_DISPERSION_MODULO)
       {
-         throw new IOException("Morphogenetic locale dispersion (" + n + ") loaded must equal morphogenetic local dispersion (" + MORPHOGENETIC_DISPERSION_MODULO + ")");
+         throw new IOException("Morphogenetic cell dispersion (" + n + ") loaded must equal morphogenetic cell dispersion (" + MORPHOGENETIC_CELL_DISPERSION_MODULO + ")");
       }
    }
 }

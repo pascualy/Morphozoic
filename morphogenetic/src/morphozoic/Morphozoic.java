@@ -641,8 +641,8 @@ public class Morphozoic extends JFrame implements Runnable
                System.err.println(usage);
                return;
             }
-            Parameters.MORPHOGENETIC_DISPERSION_MODULO = Integer.parseInt(args[i]);
-            if (Parameters.MORPHOGENETIC_DISPERSION_MODULO < 1)
+            Parameters.MORPHOGENETIC_CELL_DISPERSION_MODULO = Integer.parseInt(args[i]);
+            if (Parameters.MORPHOGENETIC_CELL_DISPERSION_MODULO < 1)
             {
                System.err.println("Morphogenetic cell dispersion must be positive");
                System.err.println(usage);

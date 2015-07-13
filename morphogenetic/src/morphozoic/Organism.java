@@ -116,7 +116,7 @@ public class Organism
       {
          for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
          {
-            if ((cells[x][y].type != Cell.EMPTY) && morphogeneticLocale(x, y))
+            if ((cells[x][y].type != Cell.EMPTY) && morphogeneticCell(x, y))
             {
                cells[x][y].generateMorphogen();
             }
@@ -263,7 +263,7 @@ public class Organism
          {
             for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
             {
-               if ((predecessorCells[x][y].type != Cell.EMPTY) && morphogeneticLocale(x, y))
+               if ((predecessorCells[x][y].type != Cell.EMPTY) && morphogeneticCell(x, y))
                {
                   for (int i = 0, j = randomizer.nextInt(n); i < n; i++, j = (j + 1) % n)
                   {
@@ -428,7 +428,7 @@ public class Organism
       for (int i = 0; i < n; i++)
       {
          MetamorphDistance m = metamorphs.get(i);
-         weights[i] = m.morphogenDistance + Parameters.MORPHOGEN_DISTANCE_BIAS;
+         weights[i] = m.morphogenDistance + Parameters.METAMORPH_RANDOM_BIAS;
          sum       += weights[i];
       }
       if (sum > 0.0f)
@@ -451,11 +451,11 @@ public class Organism
    }
 
 
-   // Is a morphogenetic field centered at this locale?
-   public boolean morphogeneticLocale(int x, int y)
+   // Is a morphogenetic field at this cell location?
+   public boolean morphogeneticCell(int x, int y)
    {
-      if (((x % Parameters.MORPHOGENETIC_DISPERSION_MODULO) == 0) &&
-          ((y % Parameters.MORPHOGENETIC_DISPERSION_MODULO) == 0))
+      if (((x % Parameters.MORPHOGENETIC_CELL_DISPERSION_MODULO) == 0) &&
+          ((y % Parameters.MORPHOGENETIC_CELL_DISPERSION_MODULO) == 0))
       {
          return(true);
       }
