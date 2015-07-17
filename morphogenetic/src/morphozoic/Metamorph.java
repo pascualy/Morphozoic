@@ -10,8 +10,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 
+import rdtree.RDclient;
+
 // Metamorph.
-public class Metamorph
+public class Metamorph implements RDclient
 {
    // Morphogen.
    public Morphogen morphogen;
@@ -102,6 +104,13 @@ public class Metamorph
    }
 
 
+   // RDclient distance.
+   public float dist(RDclient client)
+   {
+      return(morphogen.compare(((Metamorph)client).morphogen));
+   }
+
+
    // Execute: overlay cell neighborhood with target cells.
    public void exec(Cell cell)
    {
@@ -119,7 +128,7 @@ public class Metamorph
    }
 
 
-   // Cell properties metamorph.
+   // Execution helper: Cell properties metamorph.
    public class CellProps implements Comparable<CellProps>
    {
       public int         type;
@@ -154,7 +163,7 @@ public class Metamorph
       }
    }
 
-   // Cell properties metamorph list.
+   // Execution helper: Cell properties metamorph list.
    public class CellPropsList
    {
       public ArrayList<CellProps> morphs;

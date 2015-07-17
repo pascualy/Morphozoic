@@ -17,6 +17,7 @@ import java.util.Vector;
 
 import javax.imageio.ImageIO;
 
+import rdtree.RDclient;
 import morphozoic.Cell;
 import morphozoic.Metamorph;
 import morphozoic.Organism;
@@ -169,9 +170,20 @@ public class Celegans extends Organism
             if (!eof)
             {
                Metamorph m;
-               while ((m = Metamorph.load(reader)) != null)
+               if (Parameters.EXEC_METAMORPHS_WITH_SEARCH_TREE)
                {
-                  metamorphs.add(m);
+                  while ((m = Metamorph.load(reader)) != null)
+                  {
+                     metamorphs.add(m);
+                     metamorphSearch.insert((RDclient)m);
+                  }
+               }
+               else
+               {
+                  while ((m = Metamorph.load(reader)) != null)
+                  {
+                     metamorphs.add(m);
+                  }
                }
             }
          }

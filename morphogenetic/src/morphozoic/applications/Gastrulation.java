@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Random;
 
+import rdtree.RDclient;
 import morphozoic.Cell;
 import morphozoic.Metamorph;
 import morphozoic.Organism;
@@ -88,9 +89,20 @@ public class Gastrulation extends Organism
             reader = new DataInputStream(new FileInputStream(execFilename));
             Parameters.loadParms(reader);
             Metamorph m;
-            while ((m = Metamorph.load(reader)) != null)
+            if (Parameters.EXEC_METAMORPHS_WITH_SEARCH_TREE)
             {
-               metamorphs.add(m);
+               while ((m = Metamorph.load(reader)) != null)
+               {
+                  metamorphs.add(m);
+                  metamorphSearch.insert((RDclient)m);
+               }
+            }
+            else
+            {
+               while ((m = Metamorph.load(reader)) != null)
+               {
+                  metamorphs.add(m);
+               }
             }
          }
          catch (Exception e)

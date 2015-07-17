@@ -10,6 +10,11 @@ import java.util.Collections;
 import java.util.Random;
 import java.util.Vector;
 
+import rdtree.RDclient;
+import rdtree.RDtree;
+import rdtree.RDtree.RDsearch;
+import rdtree.RDtree.TestClient;
+
 // Organism.
 public class Organism
 {
@@ -24,6 +29,9 @@ public class Organism
 
    // Metamorphs.
    public Vector<Metamorph> metamorphs;
+
+   // Metamorph search tree.
+   public RDtree metamorphSearch;
 
    // Cells editable?
    public boolean isEditable = false;
@@ -72,6 +80,7 @@ public class Organism
 
       predecessorCells = new Cell[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
       metamorphs       = new Vector<Metamorph>();
+      metamorphSearch  = new RDtree();
       tick             = 0;
    }
 
@@ -185,7 +194,7 @@ public class Organism
    }
 
 
-   // Metamorph morphogen distance.
+   // Execution helper: Metamorph morphogen distance.
    public class MetamorphDistance implements Comparable<MetamorphDistance>
    {
       public Metamorph metamorph;
@@ -218,7 +227,7 @@ public class Organism
       }
    }
 
-   // Cell metamorphs.
+   // Execution helper: Cell metamorphs.
    public class CellMetamorphs
    {
       public ArrayList<MetamorphDistance> morphs;
@@ -265,17 +274,38 @@ public class Organism
             {
                if ((predecessorCells[x][y].type != Cell.EMPTY) && morphogeneticCell(x, y))
                {
-                  for (int i = 0, j = randomizer.nextInt(n); i < n; i++, j = (j + 1) % n)
+                  if (Parameters.EXEC_METAMORPHS_WITH_SEARCH_TREE)
                   {
-                     Metamorph m = metamorphs.get(j);
-                     float     d = predecessorCells[x][y].morphogen.compare(m.morphogen);
-                     if (d <= Parameters.MAX_MORPHOGEN_COMPARE_DISTANCE)
+                     Metamorph m          = new Metamorph(predecessorCells[x][y].morphogen, cells[x][y]);
+                     RDsearch  searchList = metamorphSearch.search((RDclient)m, Parameters.MAX_CELL_METAMORPHS, n);
+                     for ( ; searchList != null; searchList = searchList.srchnext)
                      {
-                        if (cellMorphs[x][y] == null)
+                        float d = searchList.distance;
+                        if (d <= Parameters.MAX_MORPHOGEN_COMPARE_DISTANCE)
                         {
-                           cellMorphs[x][y] = new CellMetamorphs();
+                           m = (Metamorph)searchList.node.client;
+                           if (cellMorphs[x][y] == null)
+                           {
+                              cellMorphs[x][y] = new CellMetamorphs();
+                           }
+                           cellMorphs[x][y].add(m, d);
                         }
-                        cellMorphs[x][y].add(m, d);
+                     }
+                  }
+                  else
+                  {
+                     for (int i = 0, j = randomizer.nextInt(n); i < n; i++, j = (j + 1) % n)
+                     {
+                        Metamorph m = metamorphs.get(j);
+                        float     d = predecessorCells[x][y].morphogen.compare(m.morphogen);
+                        if (d <= Parameters.MAX_MORPHOGEN_COMPARE_DISTANCE)
+                        {
+                           if (cellMorphs[x][y] == null)
+                           {
+                              cellMorphs[x][y] = new CellMetamorphs();
+                           }
+                           cellMorphs[x][y].add(m, d);
+                        }
                      }
                   }
                }

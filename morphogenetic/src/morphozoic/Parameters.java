@@ -60,6 +60,11 @@ public class Parameters
    public static final int DEFAULT_MORPHOGENETIC_CELL_DISPERSION_MODULO = 1;
    public static int       MORPHOGENETIC_CELL_DISPERSION_MODULO         = DEFAULT_MORPHOGENETIC_CELL_DISPERSION_MODULO;
 
+   // Execute metamorphs using relative distance search tree?
+   // false = search all metamorphs.
+   public static final boolean DEFAULT_EXEC_METAMORPHS_WITH_SEARCH_TREE = true;
+   public static boolean       EXEC_METAMORPHS_WITH_SEARCH_TREE         = DEFAULT_EXEC_METAMORPHS_WITH_SEARCH_TREE;
+
    // Default organism.
    public static final String DEFAULT_ORGANISM = "morphozoic.applications.Gastrulation";
 
