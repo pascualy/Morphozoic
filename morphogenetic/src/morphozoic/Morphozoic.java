@@ -79,6 +79,7 @@ public class Morphozoic extends JFrame implements Runnable
    Panel     controlPanel;
    Dimension controlPanelSize;
    Checkbox  stepButton;
+   Checkbox  stopButton;
    JSlider   updateSlider;
    int       updateDelay = MAX_UPDATE_DELAY;
 
@@ -190,6 +191,8 @@ public class Morphozoic extends JFrame implements Runnable
       getContentPane().add(controlPanel, BorderLayout.SOUTH);
       stepButton = new Checkbox("Step");
       controlPanel.add(stepButton);
+      stopButton = new Checkbox("Stop");
+      controlPanel.add(stopButton);
       controlPanel.add(new Label("Fast", Label.RIGHT));
       updateSlider = new JSlider(Scrollbar.HORIZONTAL, MIN_UPDATE_DELAY,
                                  MAX_UPDATE_DELAY, MAX_UPDATE_DELAY);
@@ -237,6 +240,21 @@ public class Morphozoic extends JFrame implements Runnable
             stepButton.setState(false);
             updateDelay = MAX_UPDATE_DELAY;
             updateSlider.setValue(updateDelay);
+         }
+         
+         if(stopButton.getState()){
+             updateDelay = MAX_UPDATE_DELAY;
+        	 stopButton.setState(false);
+             for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+             {
+                for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+                {
+                	if(organism.cells[x][y].type == 0){
+                		organism.cells[x][y].type = -1;
+                	}
+                }
+             }
+             
          }
 
          // Set the timer for the next loop.

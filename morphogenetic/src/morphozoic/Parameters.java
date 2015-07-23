@@ -11,7 +11,7 @@ import java.io.IOException;
 public class Parameters
 {
    // Organism dimensions in cell units.
-   public static final Dimension DEFAULT_ORGANISM_DIMENSIONS = new Dimension(200, 200);
+   public static final Dimension DEFAULT_ORGANISM_DIMENSIONS = new Dimension(100, 100);
    public static Dimension       ORGANISM_DIMENSIONS         = DEFAULT_ORGANISM_DIMENSIONS;
 
    // Number of cell types.
@@ -19,7 +19,7 @@ public class Parameters
    public static int       NUM_CELL_TYPES         = DEFAULT_NUM_CELL_TYPES;
 
    // Neighborhood dimension: odd number.
-   public static final int DEFAULT_NEIGHBORHOOD_DIMENSION = 11;
+   public static final int DEFAULT_NEIGHBORHOOD_DIMENSION = 5;
    public static int       NEIGHBORHOOD_DIMENSION         = DEFAULT_NEIGHBORHOOD_DIMENSION;
    //Average Density: 0-1
    public static final double DEFAULT_AVERAGE_DENSITY = 1;

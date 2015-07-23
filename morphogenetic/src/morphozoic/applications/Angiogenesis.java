@@ -196,7 +196,7 @@ public class Angiogenesis extends Organism
 	   
       int x, y, x2, y2, w, h, count, i, j, l, k;
       int fieldDensity = 0;
-      int minDensity   = -1;
+      int minDensity   = 10000;
       int minField     = -1;
       // Clear cells.
 
@@ -209,7 +209,7 @@ public class Angiogenesis extends Organism
          for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
          {
         	 if ( predecessorCells[x][y].type != Cell.EMPTY && predecessorCells[x][y].type != 1 ){
-        		 for(i = 0; i < 4; i++){ //north,east,south,west
+        		 for(i = 0; i < 8; i++){ //north,east,south,west,NE,SE,SW,NW
          		 	for(j = 1; j <= (neighborhoodSize + 1)/2; j++  ){ //number of cells perpendicularly away from source
             		 	for(k = -((neighborhoodSize - 1)/2 + j); k <= ((neighborhoodSize - 1)/2 + j); k++   ) {//number of cells laterally away from source
             		 		try {
@@ -224,6 +224,19 @@ public class Angiogenesis extends Organism
             		 				++fieldDensity;
             		 			}
             		 			else if(i == 3 && predecessorCells[x + j][y + k].type != Cell.EMPTY){//west field
+            		 				++fieldDensity;
+            		 			}
+            		 			k += 1;
+            		 			if(		i == 4 && predecessorCells[x - j][y + k].type != Cell.EMPTY){//NE field
+            		 				++fieldDensity;
+            		 			}
+            		 			else if(i == 5 && predecessorCells[x - j][y - k].type != Cell.EMPTY){//SE field
+            		 				++fieldDensity;
+            		 			}
+            		 			else if(i == 6 && predecessorCells[x + j][y - k].type != Cell.EMPTY){//SW field
+            		 				++fieldDensity;
+            		 			}
+            		 			else if(i == 7 && predecessorCells[x + j][y + k].type != Cell.EMPTY){//NW field
             		 				++fieldDensity;
             		 			}
             		 		}
@@ -251,7 +264,6 @@ public class Angiogenesis extends Organism
          		 		}
          		 		catch(ArrayIndexOutOfBoundsException e){
          		 		}
-
          		 	}
          		 	else if(i == 2 && fieldDensity < Parameters.AVERAGE_DENSITY){
          		 		try{
@@ -271,18 +283,45 @@ public class Angiogenesis extends Organism
          		 		catch(ArrayIndexOutOfBoundsException e){
          		 		}
          		 	}
+         		 	else if(i == 4 && minDensity < Parameters.AVERAGE_DENSITY){
+         		 		try{	
+         		 			if(cells[x+1][y+1].type != 1)
+         		 				cells[x+1][y+1].type = 0;
+         		 			cells[x][y].type = 1;
+         		 		}
+         		 		catch(ArrayIndexOutOfBoundsException e){
+         		 		}
+         		 	}
+         		 	else if(i == 5 && minDensity < Parameters.AVERAGE_DENSITY){
+         		 		try{	
+         		 			if(cells[x+1][y-1].type != 1)
+         		 				cells[x+1][y-1].type = 0;
+         		 			cells[x][y].type = 1;
+         		 		}
+         		 		catch(ArrayIndexOutOfBoundsException e){
+         		 		}
+         		 	}
+         		 	else if(i == 6 && minDensity < Parameters.AVERAGE_DENSITY){
+         		 		try{	
+         		 			if(cells[x-1][y-1].type != 1)
+         		 				cells[x-1][y-1].type = 0;
+         		 			cells[x][y].type = 1;
+         		 		}
+         		 		catch(ArrayIndexOutOfBoundsException e){
+         		 		}
+         		 	}
+         		 	else if(i == 7 && minDensity < Parameters.AVERAGE_DENSITY){
+         		 		try{	
+         		 			if(cells[x-1][y+1].type != 1)
+         		 				cells[x-1][y+1].type = 0;
+         		 			cells[x][y].type = 1;
+         		 		}
+         		 		catch(ArrayIndexOutOfBoundsException e){
+         		 		}
+         		 	}
          		 	fieldDensity = 0;
-
         		 }
         	 }
-        	 
-        	 
-        	 
-        	 
-        	 
-        	 
-        	 
-
          }
       }
    }
