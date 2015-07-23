@@ -226,7 +226,7 @@ public class Angiogenesis extends Organism
             		 			else if(i == 3 && predecessorCells[x + j][y + k].type != Cell.EMPTY){//west field
             		 				++fieldDensity;
             		 			}
-            		 			k += 1;
+            		 			/*
             		 			if(		i == 4 && predecessorCells[x - j][y + k].type != Cell.EMPTY){//NE field
             		 				++fieldDensity;
             		 			}
@@ -239,6 +239,7 @@ public class Angiogenesis extends Organism
             		 			else if(i == 7 && predecessorCells[x + j][y + k].type != Cell.EMPTY){//NW field
             		 				++fieldDensity;
             		 			}
+            		 			*/
             		 		}
             		 		catch(ArrayIndexOutOfBoundsException e){
              		 		}
@@ -283,6 +284,7 @@ public class Angiogenesis extends Organism
          		 		catch(ArrayIndexOutOfBoundsException e){
          		 		}
          		 	}
+         		 	/*
          		 	else if(i == 4 && minDensity < Parameters.AVERAGE_DENSITY){
          		 		try{	
          		 			if(cells[x+1][y+1].type != 1)
@@ -319,6 +321,7 @@ public class Angiogenesis extends Organism
          		 		catch(ArrayIndexOutOfBoundsException e){
          		 		}
          		 	}
+         		 	*/
          		 	fieldDensity = 0;
         		 }
         	 }

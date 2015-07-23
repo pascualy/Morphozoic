@@ -11,7 +11,7 @@ import java.io.IOException;
 public class Parameters
 {
    // Organism dimensions in cell units.
-   public static final Dimension DEFAULT_ORGANISM_DIMENSIONS = new Dimension(100, 100);
+   public static final Dimension DEFAULT_ORGANISM_DIMENSIONS = new Dimension(50, 50);
    public static Dimension       ORGANISM_DIMENSIONS         = DEFAULT_ORGANISM_DIMENSIONS;
 
    // Number of cell types.
