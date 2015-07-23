@@ -19,9 +19,11 @@ public class Parameters
    public static int       NUM_CELL_TYPES         = DEFAULT_NUM_CELL_TYPES;
 
    // Neighborhood dimension: odd number.
-   public static final int DEFAULT_NEIGHBORHOOD_DIMENSION = 3;
+   public static final int DEFAULT_NEIGHBORHOOD_DIMENSION = 2;
    public static int       NEIGHBORHOOD_DIMENSION         = DEFAULT_NEIGHBORHOOD_DIMENSION;
-
+   //Average Density: 0-1
+   public static final double DEFAULT_AVERAGE_DENSITY = 1;
+   public static double	   AVERAGE_DENSITY = DEFAULT_AVERAGE_DENSITY;
    // Number of neighborhoods.
    public static final int DEFAULT_NUM_NEIGHBORHOODS = 3;
    public static int       NUM_NEIGHBORHOODS         = DEFAULT_NUM_NEIGHBORHOODS;

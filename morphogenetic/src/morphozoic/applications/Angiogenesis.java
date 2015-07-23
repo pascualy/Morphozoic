@@ -18,7 +18,7 @@ import morphozoic.Parameters;
 // Game of Life.
 public class Angiogenesis extends Organism
 {
-   public static final String ORGANISM_NAME = "morphozoic.applications.GameOfLife";
+   public static final String ORGANISM_NAME = "morphozoic.applications.Angiogenesis";
 
    // Options.
    public static final String OPTIONS = "\n\t[-genMetamorphs <save file name>]\n\t[-execMetamorphs <load file name>]";
@@ -190,14 +190,16 @@ public class Angiogenesis extends Organism
    // Step Game of Life.
    private void step()
    {
-      int x, y, x2, y2, w, h, count;
-
+      int x, y, x2, y2, w, h, count, i, j, l, k;
+      int fieldDensity = 0;
+      int minDensity   = -1;
+      int minField     = -1;
       // Clear cells.
       for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
       {
          for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
          {
-            cells[x][y].type = Cell.EMPTY;
+        	 //cells[x][y].type = predecessorCells[x][y].type;
          }
       }
 
@@ -209,131 +211,86 @@ public class Angiogenesis extends Organism
       {
          for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
          {
-            count = 0;
-            x2    = x - w;
+        	 if ( predecessorCells[x][y].type != Cell.EMPTY && predecessorCells[x][y].type != 1 ){
+        		 for(i = 0; i < 4; i++){ //north,east,south,west
+         		 	for(j = 1; j <= (Parameters.NEIGHBORHOOD_DIMENSION + 1)/2; j++  ){ //number of cells perpendicularly away from source
+            		 	for(k = -((Parameters.NEIGHBORHOOD_DIMENSION - 1)/2 + j); k <= ((Parameters.NEIGHBORHOOD_DIMENSION - 1)/2 + j); k++   ) {//number of cells laterally away from source
+            		 		try {
+            		 			if(i == 0 && predecessorCells[x + k][y + j].type != Cell.EMPTY){//north field
+            		 				++fieldDensity;
+            		 			}
+            		 			else if(i == 1 && predecessorCells[x - j][y + k].type != Cell.EMPTY){//east field
+            		 				System.err.print("checking from x: " + x + " y:" + y + "to x: " + (x + j) + " y:" + (y + k) + "\n");
+            		 				++fieldDensity;
+            		 			}
+            		 			else if(i == 2 && predecessorCells[x + k][y - j].type != Cell.EMPTY){//south field
+            		 				++fieldDensity;
+            		 			}
+            		 			else if(i == 3 && predecessorCells[x + j][y + k].type != Cell.EMPTY){//west field
+            		 				++fieldDensity;
+            		 			}
+            		 		}
+            		 		catch(ArrayIndexOutOfBoundsException e){
+             		 		}
+            		 	}
+         		 	}
+         		 	if(fieldDensity < minDensity ) minField = i; minDensity = fieldDensity;
+         		 	
+         		 	System.err.print("x:"+x+" y:"+ y +" d:"+ i + " fieldDensity" + fieldDensity + "\n");
+         		 	
+         		 	if(i == 0 && fieldDensity < Parameters.AVERAGE_DENSITY ){
+         		 		try{
+         		 			if(cells[x][y+1].type != 1)
+         		 				cells[x][y+1].type = 0;
+         		 			cells[x][y].type = 1;
+         		 		}
+         		 		catch(ArrayIndexOutOfBoundsException e){
+             		 		
+         		 		}
+         		 	}
+         		 	else if(i == 1 && fieldDensity < Parameters.AVERAGE_DENSITY){
+         		 		try{
+         		 			if(cells[x - 1][y].type != 1)
+         		 				cells[x - 1][y].type = 0; 
+         		 			cells[x][y].type = 1;
+         		 		}
+         		 		catch(ArrayIndexOutOfBoundsException e){
+         		 		
+         		 		}
 
-            while (x2 < 0)
-            {
-               x2 += Parameters.ORGANISM_DIMENSIONS.width;
-            }
+         		 	}
+         		 	else if(i == 2 && fieldDensity < Parameters.AVERAGE_DENSITY){
+         		 		try{
+         		 			if(cells[x][y - 1].type != 1)
+         		 				cells[x][y - 1].type = 0;
+         		 			cells[x][y].type = 1;
+         		 		}
+         		 		catch(ArrayIndexOutOfBoundsException e){
+             		 		
+         		 		}
+         		 	}
+         		 	else if(i == 3 && minDensity < Parameters.AVERAGE_DENSITY){
+         		 		try{	
+         		 			if(cells[x+1][y].type != 1)
+         		 				cells[x+1][y].type = 0;
+         		 			cells[x][y].type = 1;
+         		 		}
+         		 		catch(ArrayIndexOutOfBoundsException e){
+             		 		
+         		 		}
+         		 	}
+         		 	fieldDensity = 0;
 
-            y2 = y;
+        		 }
+        	 }
+        	 
+        	 
+        	 
+        	 
+        	 
+        	 
+        	 
 
-            if (predecessorCells[x2][y2].type != Cell.EMPTY)
-            {
-               count++;
-            }
-
-            y2 = y - h;
-
-            while (y2 < 0)
-            {
-               y2 += Parameters.ORGANISM_DIMENSIONS.height;
-            }
-
-            if (predecessorCells[x2][y2].type != Cell.EMPTY)
-            {
-               count++;
-            }
-
-            y2 = y + h;
-
-            while (y2 >= Parameters.ORGANISM_DIMENSIONS.height)
-            {
-               y2 -= Parameters.ORGANISM_DIMENSIONS.height;
-            }
-
-            if (predecessorCells[x2][y2].type != Cell.EMPTY)
-            {
-               count++;
-            }
-
-            x2 = x;
-            y2 = y - h;
-
-            while (y2 < 0)
-            {
-               y2 += Parameters.ORGANISM_DIMENSIONS.height;
-            }
-
-            if (predecessorCells[x2][y2].type != Cell.EMPTY)
-            {
-               count++;
-            }
-
-            y2 = y + h;
-
-            while (y2 >= Parameters.ORGANISM_DIMENSIONS.height)
-            {
-               y2 -= Parameters.ORGANISM_DIMENSIONS.height;
-            }
-
-            if (predecessorCells[x2][y2].type != Cell.EMPTY)
-            {
-               count++;
-            }
-
-            x2 = x + w;
-
-            while (x2 >= Parameters.ORGANISM_DIMENSIONS.width)
-            {
-               x2 -= Parameters.ORGANISM_DIMENSIONS.width;
-            }
-
-            y2 = y;
-
-            if (predecessorCells[x2][y2].type != Cell.EMPTY)
-            {
-               count++;
-            }
-
-            y2 = y - h;
-
-            while (y2 < 0)
-            {
-               y2 += Parameters.ORGANISM_DIMENSIONS.height;
-            }
-
-            if (predecessorCells[x2][y2].type != Cell.EMPTY)
-            {
-               count++;
-            }
-
-            y2 = y + h;
-
-            while (y2 >= Parameters.ORGANISM_DIMENSIONS.height)
-            {
-               y2 -= Parameters.ORGANISM_DIMENSIONS.height;
-            }
-
-
-            if (predecessorCells[x2][y2].type != Cell.EMPTY)
-            {
-               count++;
-            }
-
-            if (predecessorCells[x][y].type != Cell.EMPTY)
-            {
-               if ((count > 3) || (count < 2))
-               {
-                  cells[x][y].type = Cell.EMPTY;
-               }
-               else
-               {
-                  cells[x][y].type = 0;
-               }
-            }
-            else
-            {
-               if (count == 3)
-               {
-                  cells[x][y].type = 0;
-               }
-               else
-               {
-                  cells[x][y].type = Cell.EMPTY;
-               }
-            }
          }
       }
    }

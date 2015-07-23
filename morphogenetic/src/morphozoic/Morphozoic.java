@@ -617,6 +617,22 @@ public class Morphozoic extends JFrame implements Runnable
                return;
             }
          }
+         else if (args[i].equals("-averageDensity"))
+         {
+            i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               return;
+            }
+            Parameters.AVERAGE_DENSITY = Integer.parseInt(args[i]);
+            if ((Parameters.AVERAGE_DENSITY > 1) || ((Parameters.AVERAGE_DENSITY < 0)))
+            {
+               System.err.println("Average Density must be between 0 and 1");
+               System.err.println(usage);
+               return;
+            }
+         }
          else if (args[i].equals("-numNeighborhoods"))
          {
             i++;
