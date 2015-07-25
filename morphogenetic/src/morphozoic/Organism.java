@@ -13,7 +13,6 @@ import java.util.Vector;
 import rdtree.RDclient;
 import rdtree.RDtree;
 import rdtree.RDtree.RDsearch;
-import rdtree.RDtree.TestClient;
 
 // Organism.
 public class Organism
