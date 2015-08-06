@@ -260,6 +260,7 @@ public class Metamorph implements RDclient
             writer.writeInt(targetCells[x][y].orientation.ordinal());
          }
       }
+      writer.flush();
    }
 
 

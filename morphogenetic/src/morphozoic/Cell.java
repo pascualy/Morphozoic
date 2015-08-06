@@ -44,7 +44,7 @@ public class Cell
    // Get color.
    public Color getColor()
    {
-      return(getColor(type));
+      return(organism.getColor(type));
    }
 
 

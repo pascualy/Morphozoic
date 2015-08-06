@@ -79,8 +79,8 @@ public class Parameters
       writer.writeInt(ORGANISM_DIMENSIONS.height);
       writer.writeInt(NUM_CELL_TYPES);
       writer.writeInt(NEIGHBORHOOD_DIMENSION);
-      writer.writeInt(METAMORPH_DIMENSION);
       writer.writeInt(NUM_NEIGHBORHOODS);
+      writer.writeInt(METAMORPH_DIMENSION);
       writer.writeInt(MORPHOGENETIC_CELL_DISPERSION_MODULO);
       writer.flush();
    }
@@ -111,14 +111,14 @@ public class Parameters
          throw new IOException("Morphogen neighborhood dimension (" + n + ") loaded must equal neighborhood dimension (" + NEIGHBORHOOD_DIMENSION + ")");
       }
       n = reader.readInt();
-      if (n != METAMORPH_DIMENSION)
-      {
-         throw new IOException("Metamorph dimension (" + n + ") loaded must equal metamorph dimension (" + METAMORPH_DIMENSION + ")");
-      }
-      n = reader.readInt();
       if (n != NUM_NEIGHBORHOODS)
       {
          throw new IOException("Morphogen number of neighborhoods (" + n + ") loaded must equal number of neighborhoods (" + NUM_NEIGHBORHOODS + ")");
+      }
+      n = reader.readInt();
+      if (n != METAMORPH_DIMENSION)
+      {
+         throw new IOException("Metamorph dimension (" + n + ") loaded must equal metamorph dimension (" + METAMORPH_DIMENSION + ")");
       }
       n = reader.readInt();
       if (n != MORPHOGENETIC_CELL_DISPERSION_MODULO)

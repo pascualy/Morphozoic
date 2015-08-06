@@ -90,7 +90,7 @@ public class Morphozoic extends JFrame implements Runnable
    int         fontHeight;
 
    // Options.
-   public static final String OPTIONS = "\n\t[-displaySize <width> <height>]\n\t[-organismDimensions <width> <height> (# cells)]\n\t[-numCellTypes <number of cell types>]\n\t[-neighborhoodDimension <cell neighborhood dimension>]\n\t[-numNeighborhoods <number of nested neighborhoods>]\n\t[-morphogeneticCellDispersion <morphogenetic cell dispersiony>]\n\t[-randomSeed <random seed>]";
+   public static final String OPTIONS = "\n\t[-displaySize <width> <height>]\n\t[-organismDimensions <width> <height> (# cells)]\n\t[-numCellTypes <number of cell types>]\n\t[-neighborhoodDimension <cell neighborhood dimension>]\n\t[-numNeighborhoods <number of nested neighborhoods>]\n\t[-morphogeneticCellDispersion <morphogenetic cell dispersiony>]\n\t[-metamorphDimension <metamorph neighborhood dimension>]\n\t[-randomSeed <random seed>]";
 
    // Constructor.
    public Morphozoic(String organismName, String[] organismArgs) throws Exception
@@ -296,7 +296,7 @@ public class Morphozoic extends JFrame implements Runnable
                   cw = ((int)(cellWidth * (double)sector.d) + 1) / Parameters.NUM_CELL_TYPES;
                   for (j = 0, x = (int)(cellWidth * (double)x3) - 1; j < Parameters.NUM_CELL_TYPES; j++, x += cw)
                   {
-                     imageGraphics.setColor(Cell.getColor(j));
+                     imageGraphics.setColor(organism.getColor(j));
                      d  = sector.getTypeDensity(j);
                      ch = (int)(cellHeight * (float)sector.d * d);
                      y  = (int)(cellHeight * (double)(h - (y3 + sector.d)));
@@ -440,13 +440,18 @@ public class Morphozoic extends JFrame implements Runnable
                {
                   if (organism.isEditable)
                   {
+                     System.out.println("x=" + x + ",y=" + y);
                      if (organism.cells[x][y].type == Cell.EMPTY)
                      {
                         organism.cells[x][y].type = 0;
                      }
                      else
                      {
-                        organism.cells[x][y].type = Cell.EMPTY;
+                        organism.cells[x][y].type++;
+                        if (organism.cells[x][y].type == Parameters.NUM_CELL_TYPES)
+                        {
+                           organism.cells[x][y].type = Cell.EMPTY;
+                        }
                      }
                   }
                   else
@@ -645,6 +650,22 @@ public class Morphozoic extends JFrame implements Runnable
             if (Parameters.MORPHOGENETIC_CELL_DISPERSION_MODULO < 1)
             {
                System.err.println("Morphogenetic cell dispersion must be positive");
+               System.err.println(usage);
+               return;
+            }
+         }
+         else if (args[i].equals("-metamorphDimension"))
+         {
+            i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               return;
+            }
+            Parameters.METAMORPH_DIMENSION = Integer.parseInt(args[i]);
+            if ((Parameters.METAMORPH_DIMENSION <= 0) || ((Parameters.METAMORPH_DIMENSION % 2) != 1))
+            {
+               System.err.println("Metamorph neighborhood dimension must be positive odd number");
                System.err.println(usage);
                return;
             }

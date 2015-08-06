@@ -10,8 +10,12 @@ java -jar morphozoic.jar -genMetamorphs metamorphs.dat
 To load and run using the metamorph templates:
 java -jar morphozoic.jar -execMetamorphs metamorphs.dat
 
-To run the Game of Life application, specify with the -organism option:
+Game of Life application:
 java -jar morphozoic.jar -organism morphozoic.applications.GameOfLife
 
-To run the C elegans application, specify with the -organism option:
+C. elegans application:
 java -jar morphozoic.jar -organism morphozoic.applications.Celegans
+
+Path finder application:
+java -jar morphozoic.jar -organism morphozoic.applications.Pathfinder
+

@@ -2,6 +2,7 @@
 
 package morphozoic;
 
+import java.awt.Color;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -62,16 +63,14 @@ public class Organism
    // Initialize.
    private void init()
    {
-      int x, y;
-
       // Random numbers.
       randomizer = new Random(Parameters.RANDOM_SEED);
 
       // Create cells.
       cells = new Cell[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
-      for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+      for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
       {
-         for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+         for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
          {
             cells[x][y] = new Cell(Cell.EMPTY, x, y, Orientation.NORTH, this);
          }
@@ -190,6 +189,7 @@ public class Organism
       }
       metamorphs.add(metamorph);
       metamorph.save(writer);
+      writer.flush();
    }
 
 
@@ -492,5 +492,12 @@ public class Organism
       {
          return(false);
       }
+   }
+
+
+   // Get color for cell type.
+   public Color getColor(int type)
+   {
+      return(Cell.getColor(type));
    }
 }

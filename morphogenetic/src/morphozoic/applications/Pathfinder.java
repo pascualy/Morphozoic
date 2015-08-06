@@ -2,6 +2,7 @@
 
 package morphozoic.applications;
 
+import java.awt.Color;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -15,6 +16,7 @@ import rdtree.RDclient;
 import morphozoic.Cell;
 import morphozoic.Metamorph;
 import morphozoic.Organism;
+import morphozoic.Orientation;
 import morphozoic.Parameters;
 
 // Path finder.
@@ -23,7 +25,7 @@ public class Pathfinder extends Organism
    public static final String ORGANISM_NAME = "morphozoic.applications.Pathfinder";
 
    // Path finding cell neighborhood dimension.
-   public static final int DEFAULT_PATH_FINDING_NEIGHBORHOOD_DIMENSION = 19;
+   public static final int DEFAULT_PATH_FINDING_NEIGHBORHOOD_DIMENSION = 11;
    public static int       PATH_FINDING_NEIGHBORHOOD_DIMENSION         = DEFAULT_PATH_FINDING_NEIGHBORHOOD_DIMENSION;
 
    // Options.
@@ -31,6 +33,11 @@ public class Pathfinder extends Organism
 
    // Metamorph accumulation file.
    public String accumFilename = null;
+
+   // Cell types.
+   public static final int SOURCE_CELL = 0;
+   public static final int TARGET_CELL = 1;
+   public static final int BRANCH_CELL = 2;
 
    // Constructor.
    public Pathfinder(String[] args, Integer id) throws IllegalArgumentException, IOException
@@ -95,9 +102,10 @@ public class Pathfinder extends Organism
             throw new IllegalArgumentException(usage);
          }
       }
-      if (Parameters.NUM_CELL_TYPES != 2)
+
+      if (Parameters.NUM_CELL_TYPES != 3)
       {
-         System.err.println("Number of cell types must equal 2");
+         System.err.println("Number of cell types must equal 3");
          System.err.println(usage);
          throw new IllegalArgumentException(usage);
       }
@@ -119,31 +127,30 @@ public class Pathfinder extends Organism
          System.err.println(usage);
          throw new IllegalArgumentException(usage);
       }
-
+      for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+      {
+         for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+         {
+            cells[x][y] = new Cell(Cell.EMPTY, x, y, Orientation.NORTH, this);
+         }
+      }
       isEditable = true;
       if (accumFilename != null)
       {
-         isEditable = false;
          try
          {
             reader = new DataInputStream(new FileInputStream(accumFilename));
             Parameters.loadParms(reader);
-            int     x, y;
+            int     x, y, t;
             boolean eof = false;
-            for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
-            {
-               for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
-               {
-                  cells[x][y].type = Cell.EMPTY;
-               }
-            }
             try
             {
                x = reader.readInt();
                while (x != -1)
                {
                   y = reader.readInt();
-                  cells[x][y].type = 0;
+                  t = reader.readInt();
+                  cells[x][y].type = t;
                   x = reader.readInt();
                }
             }
@@ -201,22 +208,16 @@ public class Pathfinder extends Organism
          {
             reader = new DataInputStream(new FileInputStream(execFilename));
             Parameters.loadParms(reader);
-            int     x, y;
+            int     x, y, t;
             boolean eof = false;
-            for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
-            {
-               for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
-               {
-                  cells[x][y].type = Cell.EMPTY;
-               }
-            }
             try
             {
                x = reader.readInt();
                while (x != -1)
                {
                   y = reader.readInt();
-                  cells[x][y].type = 0;
+                  t = reader.readInt();
+                  cells[x][y].type = t;
                   x = reader.readInt();
                }
             }
@@ -281,11 +282,16 @@ public class Pathfinder extends Organism
                      {
                         writer.writeInt(x);
                         writer.writeInt(y);
+                        writer.writeInt(predecessorCells[x][y].type);
                      }
                   }
                }
                writer.writeInt(-1);
                writer.flush();
+               for (Metamorph m : metamorphs)
+               {
+                  m.save(writer);
+               }
             }
             catch (IOException e)
             {
@@ -341,7 +347,7 @@ public class Pathfinder extends Organism
       {
          for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
          {
-            if (cells[x][y].type == 0)
+            if (cells[x][y].type == SOURCE_CELL)
             {
                createBranches(cells[x][y], branches);
             }
@@ -363,37 +369,9 @@ public class Pathfinder extends Organism
          {
             int x2 = wrapX(cx + x);
             int y2 = wrapY(cy + y);
-            if ((x2 == cell.x) && (y2 == cell.y)) { continue; }
-            if (cells[x2][y2].type == 0)
+            if (cells[x2][y2].type == TARGET_CELL)
             {
-               int     x3        = (x2 + cell.x) / 2;
-               int     y3        = (y2 + cell.y) / 2;
-               boolean duplicate = false;
-               for (Branch b : branches)
-               {
-                  if ((b.from == cell) && (b.to == cells[x3][y3]))
-                  {
-                     duplicate = true;
-                     break;
-                  }
-               }
-               if (!duplicate)
-               {
-                  branches.add(new Branch(cell, cells[x3][y3]));
-               }
-               duplicate = false;
-               for (Branch b : branches)
-               {
-                  if ((b.from == cells[x2][y2]) && (b.to == cells[x3][y3]))
-                  {
-                     duplicate = true;
-                     break;
-                  }
-               }
-               if (!duplicate)
-               {
-                  branches.add(new Branch(cells[x2][y2], cells[x3][y3]));
-               }
+               branches.add(new Branch(cell, cells[x2][y2]));
             }
          }
       }
@@ -415,23 +393,27 @@ public class Pathfinder extends Organism
             for (int y = -1; y < 2; y++)
             {
                if ((x == 0) && (y == 0)) { continue; }
-               int   x2 = wrapX(branch.current.x + x);
-               int   y2 = wrapY(branch.current.y + y);
-               float d  = cellDist(x2, y2, branch.to.x, branch.to.y);
-               if (next.size() == 0)
+               int x2 = branch.current.x + x;
+               int y2 = branch.current.y + y;
+               if ((x2 >= 0) && (x2 < Parameters.ORGANISM_DIMENSIONS.width) &&
+                   (y2 >= 0) && (y2 < Parameters.ORGANISM_DIMENSIONS.height))
                {
-                  next.add(cells[x2][y2]);
-                  dist = d;
-               }
-               else if (d < dist)
-               {
-                  next.clear();
-                  next.add(cells[x2][y2]);
-                  dist = d;
-               }
-               else if (d == dist)
-               {
-                  next.add(cells[x2][y2]);
+                  float d = cellDist(x2, y2, branch.to.x, branch.to.y);
+                  if (next.size() == 0)
+                  {
+                     next.add(cells[x2][y2]);
+                     dist = d;
+                  }
+                  else if (d < dist)
+                  {
+                     next.clear();
+                     next.add(cells[x2][y2]);
+                     dist = d;
+                  }
+                  else if (d == dist)
+                  {
+                     next.add(cells[x2][y2]);
+                  }
                }
             }
          }
@@ -439,9 +421,9 @@ public class Pathfinder extends Organism
          {
             // Select and fill next cell in path.
             branch.current = next.get(0);
-            if (branch.current.type != 0)
+            if (branch.current.type == Cell.EMPTY)
             {
-               branch.current.type = 1;
+               branch.current.type = BRANCH_CELL;
             }
 
             // Extend branch?
@@ -458,13 +440,31 @@ public class Pathfinder extends Organism
    // Cell distance.
    float cellDist(int fromX, int fromY, int toX, int toY)
    {
-      int w2 = Parameters.ORGANISM_DIMENSIONS.width / 2;
       int dx = Math.abs(toX - fromX);
-
-      if (dx > w2) { dx = Parameters.ORGANISM_DIMENSIONS.width - dx; }
-      int h2 = Parameters.ORGANISM_DIMENSIONS.height / 2;
       int dy = Math.abs(toY - fromY);
-      if (dy > h2) { dy = Parameters.ORGANISM_DIMENSIONS.height - dy; }
+
       return(dx + dy);
+   }
+
+
+   // Get color for cell type.
+   @Override
+   public Color getColor(int type)
+   {
+      if (type == Cell.EMPTY) { return(Color.white); }
+      switch (type)
+      {
+      case Cell.EMPTY:
+         return(Color.white);
+
+      case SOURCE_CELL:
+         return(Color.green);
+
+      case TARGET_CELL:
+         return(Color.red);
+
+      default:
+         return(Color.blue);
+      }
    }
 }
