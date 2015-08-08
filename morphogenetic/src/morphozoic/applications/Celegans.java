@@ -34,7 +34,13 @@ public class Celegans extends Organism
    public String              morphImageTemplateFile            = DEFAULT_MORPH_IMAGE_TEMPLATE_FILE;
 
    // Options.
-   public static final String OPTIONS = "\n\t[-morphImageTemplateFile <image template file name with extension>\n\t    \"_[0...N]\" will be inserted before extension to load multiple files\n\t    Defaults to: " + DEFAULT_MORPH_IMAGE_TEMPLATE_FILE + "\n\t]\n\t[-genMetamorphs <save file name>]\n\t[-execMetamorphs <load file name>]";
+   public static final String OPTIONS =
+      "\n\t[-morphImageTemplateFile <image template file name with extension>"
+      + "\n\t    \"_[0...N]\" will be inserted before extension to load multiple files"
+      + "\n\t    Defaults to: " + DEFAULT_MORPH_IMAGE_TEMPLATE_FILE
+      + "\n\t]"
+      + "\n\t[-genMetamorphs <save file name>]"
+      + "\n\t[-execMetamorphs <load file name> (overrides command-line parameters)]";
 
    // Morph sequence.
    public Vector<Cell[][]> morphSequence;
@@ -128,7 +134,7 @@ public class Celegans extends Organism
          try
          {
             writer = new DataOutputStream(new FileOutputStream(genFilename));
-            Parameters.saveParms(writer);
+            Parameters.save(writer);
          }
          catch (Exception e)
          {
@@ -143,7 +149,7 @@ public class Celegans extends Organism
          try
          {
             reader = new DataInputStream(new FileInputStream(execFilename));
-            Parameters.loadParms(reader);
+            Parameters.load(reader);
             int     x, y;
             boolean eof = false;
             for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)

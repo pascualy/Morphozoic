@@ -22,7 +22,9 @@ public class GameOfLife extends Organism
    public static final String ORGANISM_NAME = "morphozoic.applications.GameOfLife";
 
    // Options.
-   public static final String OPTIONS = "\n\t[-genMetamorphs <save file name>]\n\t[-execMetamorphs <load file name>]";
+   public static final String OPTIONS =
+      "\n\t[-genMetamorphs <save file name>]"
+      + "\n\t[-execMetamorphs <load file name> (overrides command-line parameters)]";
 
    // Constructor.
    public GameOfLife(String[] args, Integer id) throws IllegalArgumentException, IOException
@@ -73,7 +75,7 @@ public class GameOfLife extends Organism
          try
          {
             writer = new DataOutputStream(new FileOutputStream(genFilename));
-            Parameters.saveParms(writer);
+            Parameters.save(writer);
          }
          catch (Exception e)
          {
@@ -88,7 +90,7 @@ public class GameOfLife extends Organism
          try
          {
             reader = new DataInputStream(new FileInputStream(execFilename));
-            Parameters.loadParms(reader);
+            Parameters.load(reader);
             int     x, y;
             boolean eof = false;
             for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)

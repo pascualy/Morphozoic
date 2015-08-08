@@ -72,58 +72,99 @@ public class Parameters
    public static final int DEFAULT_RANDOM_SEED = 4517;
    public static int       RANDOM_SEED         = DEFAULT_RANDOM_SEED;
 
-   // Save structural parameters.
-   public static void saveParms(DataOutputStream writer) throws IOException
+   // Save parameters.
+   public static void save(DataOutputStream writer) throws IOException
    {
       writer.writeInt(ORGANISM_DIMENSIONS.width);
       writer.writeInt(ORGANISM_DIMENSIONS.height);
       writer.writeInt(NUM_CELL_TYPES);
       writer.writeInt(NEIGHBORHOOD_DIMENSION);
       writer.writeInt(NUM_NEIGHBORHOODS);
+      if (NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS != null)
+      {
+         writer.writeInt(NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS.length);
+         for (int i = 0; i < NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS.length; i++)
+         {
+            writer.writeFloat(NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS[i]);
+         }
+      }
+      else
+      {
+         writer.writeInt(-1);
+      }
+      writer.writeFloat(MAX_MORPHOGEN_COMPARE_DISTANCE);
       writer.writeInt(METAMORPH_DIMENSION);
+      writer.writeInt(MAX_CELL_METAMORPHS);
+      writer.writeFloat(METAMORPH_RANDOM_BIAS);
+      writer.writeBoolean(PROBABILISTIC_METAMORPH);
+      writer.writeBoolean(INHIBIT_COMPETING_MORPHOGENS);
       writer.writeInt(MORPHOGENETIC_CELL_DISPERSION_MODULO);
+      writer.writeInt(RANDOM_SEED);
       writer.flush();
    }
 
 
-   // Load and check structural parameters.
-   public static void loadParms(DataInputStream reader) throws IOException
+   // Load parameters.
+   public static void load(DataInputStream reader) throws IOException
    {
+      ORGANISM_DIMENSIONS.width  = reader.readInt();
+      ORGANISM_DIMENSIONS.height = reader.readInt();
+      NUM_CELL_TYPES             = reader.readInt();
+      NEIGHBORHOOD_DIMENSION     = reader.readInt();
+      NUM_NEIGHBORHOODS          = reader.readInt();
       int n = reader.readInt();
+      if (n != -1)
+      {
+         NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS = new float[n];
+         for (int i = 0; i < NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS.length; i++)
+         {
+            NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS[i] = reader.readFloat();
+         }
+      }
+      else
+      {
+         NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS = null;
+      }
+      MAX_MORPHOGEN_COMPARE_DISTANCE       = reader.readFloat();
+      METAMORPH_DIMENSION                  = reader.readInt();
+      MAX_CELL_METAMORPHS                  = reader.readInt();
+      METAMORPH_RANDOM_BIAS                = reader.readFloat();
+      PROBABILISTIC_METAMORPH              = reader.readBoolean();
+      INHIBIT_COMPETING_MORPHOGENS         = reader.readBoolean();
+      MORPHOGENETIC_CELL_DISPERSION_MODULO = reader.readInt();
+      RANDOM_SEED = reader.readInt();
+   }
 
-      if (n != ORGANISM_DIMENSIONS.width)
+
+   // Print parameters.
+   public static void print()
+   {
+      System.out.println("ORGANISM_DIMENSIONS = width:" + ORGANISM_DIMENSIONS.width + " height:" + ORGANISM_DIMENSIONS.height);
+      System.out.println("NUM_CELL_TYPES = " + NUM_CELL_TYPES);
+      System.out.println("NEIGHBORHOOD_DIMENSION = " + NEIGHBORHOOD_DIMENSION);
+      System.out.println("NUM_NEIGHBORHOODS = " + NUM_NEIGHBORHOODS);
+      System.out.print("NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS = ");
+      if (NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS != null)
       {
-         throw new IOException("Organism dimensions width (" + n + ") loaded must equal dimensions width (" + ORGANISM_DIMENSIONS.width + ")");
+         for (int i = 0; i < NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS.length; i++)
+         {
+            System.out.print(NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS[i] + " ");
+         }
+         System.out.println();
       }
-      n = reader.readInt();
-      if (n != ORGANISM_DIMENSIONS.height)
+      else
       {
-         throw new IOException("Organism dimensions height (" + n + ") loaded must equal dimensions height (" + ORGANISM_DIMENSIONS.height + ")");
+         System.out.println("null");
       }
-      n = reader.readInt();
-      if (n != NUM_CELL_TYPES)
-      {
-         throw new IOException("Number of cell types (" + n + ") loaded must equal number of cell types (" + NUM_CELL_TYPES + ")");
-      }
-      n = reader.readInt();
-      if (n != NEIGHBORHOOD_DIMENSION)
-      {
-         throw new IOException("Morphogen neighborhood dimension (" + n + ") loaded must equal neighborhood dimension (" + NEIGHBORHOOD_DIMENSION + ")");
-      }
-      n = reader.readInt();
-      if (n != NUM_NEIGHBORHOODS)
-      {
-         throw new IOException("Morphogen number of neighborhoods (" + n + ") loaded must equal number of neighborhoods (" + NUM_NEIGHBORHOODS + ")");
-      }
-      n = reader.readInt();
-      if (n != METAMORPH_DIMENSION)
-      {
-         throw new IOException("Metamorph dimension (" + n + ") loaded must equal metamorph dimension (" + METAMORPH_DIMENSION + ")");
-      }
-      n = reader.readInt();
-      if (n != MORPHOGENETIC_CELL_DISPERSION_MODULO)
-      {
-         throw new IOException("Morphogenetic cell dispersion (" + n + ") loaded must equal morphogenetic cell dispersion (" + MORPHOGENETIC_CELL_DISPERSION_MODULO + ")");
-      }
+      System.out.println("MAX_MORPHOGEN_COMPARE_DISTANCE = " + MAX_MORPHOGEN_COMPARE_DISTANCE);
+      System.out.println("METAMORPH_DIMENSION = " + METAMORPH_DIMENSION);
+      System.out.println("MAX_CELL_METAMORPHS = " + MAX_CELL_METAMORPHS);
+      System.out.println("METAMORPH_RANDOM_BIAS = " + METAMORPH_RANDOM_BIAS);
+      System.out.println("PROBABILISTIC_METAMORPH = " + PROBABILISTIC_METAMORPH);
+      System.out.println("INHIBIT_COMPETING_MORPHOGENS = " + INHIBIT_COMPETING_MORPHOGENS);
+      System.out.println("MORPHOGENETIC_CELL_DISPERSION_MODULO = " + MORPHOGENETIC_CELL_DISPERSION_MODULO);
+      System.out.println("EXEC_METAMORPHS_WITH_SEARCH_TREE = " + EXEC_METAMORPHS_WITH_SEARCH_TREE);
+      System.out.println("DEFAULT_ORGANISM = " + DEFAULT_ORGANISM);
+      System.out.println("RANDOM_SEED = " + RANDOM_SEED);
    }
 }

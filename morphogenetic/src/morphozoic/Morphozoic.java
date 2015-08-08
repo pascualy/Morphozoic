@@ -90,7 +90,15 @@ public class Morphozoic extends JFrame implements Runnable
    int         fontHeight;
 
    // Options.
-   public static final String OPTIONS = "\n\t[-displaySize <width> <height>]\n\t[-organismDimensions <width> <height> (# cells)]\n\t[-numCellTypes <number of cell types>]\n\t[-neighborhoodDimension <cell neighborhood dimension>]\n\t[-numNeighborhoods <number of nested neighborhoods>]\n\t[-morphogeneticCellDispersion <morphogenetic cell dispersiony>]\n\t[-metamorphDimension <metamorph neighborhood dimension>]\n\t[-randomSeed <random seed>]";
+   public static final String OPTIONS =
+      "\n\t[-displaySize <width> <height>]"
+      + "\n\t[-organismDimensions <width> <height> (# cells)]"
+      + "\n\t[-numCellTypes <number of cell types>]"
+      + "\n\t[-neighborhoodDimension <cell neighborhood dimension>]"
+      + "\n\t[-numNeighborhoods <number of nested neighborhoods>]"
+      + "\n\t[-morphogeneticCellDispersion <morphogenetic cell dispersiony>]"
+      + "\n\t[-metamorphDimension <metamorph neighborhood dimension>]"
+      + "\n\t[-randomSeed <random seed>]";
 
    // Constructor.
    public Morphozoic(String organismName, String[] organismArgs) throws Exception

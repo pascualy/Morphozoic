@@ -19,3 +19,5 @@ java -jar morphozoic.jar -organism morphozoic.applications.Celegans
 Path finder application:
 java -jar morphozoic.jar -organism morphozoic.applications.Pathfinder
 
+Path finder optimization:
+java -classpath morphozoic.jar morphozoic.applications.PathfinderOptimizer -organismDimensions 10 10 -randomSeed 45

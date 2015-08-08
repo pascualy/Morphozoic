@@ -25,11 +25,15 @@ public class Pathfinder extends Organism
    public static final String ORGANISM_NAME = "morphozoic.applications.Pathfinder";
 
    // Path finding cell neighborhood dimension.
-   public static final int DEFAULT_PATH_FINDING_NEIGHBORHOOD_DIMENSION = 11;
+   public static final int DEFAULT_PATH_FINDING_NEIGHBORHOOD_DIMENSION = 15;
    public static int       PATH_FINDING_NEIGHBORHOOD_DIMENSION         = DEFAULT_PATH_FINDING_NEIGHBORHOOD_DIMENSION;
 
    // Options.
-   public static final String OPTIONS = "\n\t[-pathFindingNeighborhoodDimension <path finding neighborhood dimension>]\n\t[-genMetamorphs <save file name>]\n\t[-accumMetamorphs <load/save file name>]\n\t[-execMetamorphs <load file name>]";
+   public static final String OPTIONS =
+      "\n\t[-pathFindingNeighborhoodDimension <path finding neighborhood dimension>]"
+      + "\n\t[-genMetamorphs <save file name>]"
+      + "\n\t[-accumMetamorphs <load/save file name> (overrides command-line parameters)]"
+      + "\n\t[-execMetamorphs <load file name> (overrides command-line parameters)]";
 
    // Metamorph accumulation file.
    public String accumFilename = null;
@@ -140,7 +144,7 @@ public class Pathfinder extends Organism
          try
          {
             reader = new DataInputStream(new FileInputStream(accumFilename));
-            Parameters.loadParms(reader);
+            Parameters.load(reader);
             int     x, y, t;
             boolean eof = false;
             try
@@ -192,7 +196,7 @@ public class Pathfinder extends Organism
          try
          {
             writer = new DataOutputStream(new FileOutputStream(genFilename));
-            Parameters.saveParms(writer);
+            Parameters.save(writer);
          }
          catch (Exception e)
          {
@@ -207,7 +211,7 @@ public class Pathfinder extends Organism
          try
          {
             reader = new DataInputStream(new FileInputStream(execFilename));
-            Parameters.loadParms(reader);
+            Parameters.load(reader);
             int     x, y, t;
             boolean eof = false;
             try
@@ -259,12 +263,10 @@ public class Pathfinder extends Organism
    @Override
    public void update()
    {
-      int x, y;
-
       // Initialize update.
       initUpdate();
 
-      // Save initial cell types?
+      // Save initial configuration?
       if (tick == 0)
       {
          initPathfinding();
@@ -272,31 +274,7 @@ public class Pathfinder extends Organism
          if (genFilename != null)
          {
             isEditable = false;
-            try
-            {
-               for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
-               {
-                  for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
-                  {
-                     if (predecessorCells[x][y].type != Cell.EMPTY)
-                     {
-                        writer.writeInt(x);
-                        writer.writeInt(y);
-                        writer.writeInt(predecessorCells[x][y].type);
-                     }
-                  }
-               }
-               writer.writeInt(-1);
-               writer.flush();
-               for (Metamorph m : metamorphs)
-               {
-                  m.save(writer);
-               }
-            }
-            catch (IOException e)
-            {
-               System.err.println("Cannot save save cell types to " + genFilename + ":" + e.getMessage());
-            }
+            saveConfig();
          }
       }
 
@@ -318,6 +296,37 @@ public class Pathfinder extends Organism
       if (genFilename != null)
       {
          saveMetamorphs();
+      }
+   }
+
+
+   // Save configuration.
+   public void saveConfig()
+   {
+      try
+      {
+         for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+         {
+            for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+            {
+               if (cells[x][y].type != Cell.EMPTY)
+               {
+                  writer.writeInt(x);
+                  writer.writeInt(y);
+                  writer.writeInt(cells[x][y].type);
+               }
+            }
+         }
+         writer.writeInt(-1);
+         writer.flush();
+         for (Metamorph m : metamorphs)
+         {
+            m.save(writer);
+         }
+      }
+      catch (IOException e)
+      {
+         System.err.println("Cannot save configuration: " + e.getMessage());
       }
    }
 

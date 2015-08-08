@@ -3,7 +3,10 @@
 package morphozoic.applications;
 
 import java.awt.Dimension;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -14,7 +17,15 @@ import morphozoic.Parameters;
 public class PathfinderOptimizer
 {
    // Options.
-   public static final String OPTIONS = "\n\t[-organismDimensions <width> <height> (# cells)]\n\t[-numCellTypes <number of cell types>]\n\t[-randomSeed <random seed>]\n\t[-populationSize <size>]\n\t[-numTrainingMorphs <number of training morphs>]\n\t[-numSourceCells <number of source cells>]\n\t[-numTargetCells <number of target cells>]\n\t[-numUpdateSteps <number of morph update steps>]";
+   public static final String OPTIONS =
+      "\n\t[-organismDimensions <width> <height> (# cells)]"
+      + "\n\t[-numCellTypes <number of cell types>]"
+      + "\n\t[-randomSeed <random seed>]"
+      + "\n\t[-populationSize <size>]"
+      + "\n\t[-numTrainingMorphs <number of training morphs>]"
+      + "\n\t[-numSourceCells <number of source cells>]"
+      + "\n\t[-numTargetCells <number of target cells>]"
+      + "\n\t[-numUpdateSteps <number of morph update steps>]";
 
    // Optimization parameters:
 
@@ -39,7 +50,7 @@ public class PathfinderOptimizer
 
    // Number of neighborhoods range.
    public static final int MIN_NUM_NEIGHBORHOODS = 2;
-   public static final int MAX_NUM_NEIGHBORHOODS = 2;
+   public static final int MAX_NUM_NEIGHBORHOODS = 3;
 
    // Metamorph dimension range: odd number.
    public static final int MIN_METAMORPH_DIMENSION = 3;
@@ -54,8 +65,9 @@ public class PathfinderOptimizer
    public static final float MAX_METAMORPH_RANDOM_BIAS   = 0.01f;
    public static final float DELTA_METAMORPH_RANDOM_BIAS = 0.001f;
 
-   // Metamorph file name.
-   public static final String METAMORPH_FILE_NAME = "pathfinder_metamorphs.dat";
+   // File names.
+   public static final String WORK_FILE_NAME    = "pathfinder_work.dat";
+   public static final String FITTEST_FILE_NAME = "pathfinder_fittest.dat";
 
    // Path finder population member.
    class PathfinderMember
@@ -92,6 +104,7 @@ public class PathfinderOptimizer
       // Inhibit competing morphogens?
       boolean INHIBIT_COMPETING_MORPHOGENS;
 
+      // Training/testing run.
       void run(Pathfinder target) throws IOException
       {
          // Set parameters.
@@ -107,7 +120,7 @@ public class PathfinderOptimizer
          Random r = new Random(trainingSeed);
          String[] args = new String[2];
          args[0]       = "-genMetamorphs";
-         args[1]       = METAMORPH_FILE_NAME;
+         args[1]       = WORK_FILE_NAME;
          for (int i = 0; i < NUM_TRAINING_MORPHS; i++)
          {
             pathfinder = new Pathfinder(args, 0);
@@ -135,7 +148,7 @@ public class PathfinderOptimizer
 
          // Test.
          args[0]             = "-execMetamorphs";
-         args[1]             = METAMORPH_FILE_NAME;
+         args[1]             = WORK_FILE_NAME;
          pathfinder          = new Pathfinder(args, 0);
          int[][] shadowTypes = new int[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
          for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
@@ -258,11 +271,11 @@ public class PathfinderOptimizer
          float d = (float)(Parameters.ORGANISM_DIMENSIONS.width * Parameters.ORGANISM_DIMENSIONS.height);
          fitness += (d - (float)b) / d;
 
-         // Print.
-         System.out.println("Target:");
-         printCA(target.cells);
-         System.out.println("Test:");
-         printCA(pathfinder.cells);
+         // Print cells.
+         printCells(pathfinder.cells);
+
+         // Release pathfinder.
+         pathfinder = null;
       }
 
 
@@ -299,9 +312,9 @@ public class PathfinderOptimizer
 
 
       // Print cells.
-      void printCA(Cell[][] cells)
+      void printCells(Cell[][] cells)
       {
-         for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+         for (int y = Parameters.ORGANISM_DIMENSIONS.height - 1; y >= 0; y--)
          {
             for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
             {
@@ -317,6 +330,39 @@ public class PathfinderOptimizer
             System.out.println();
          }
       }
+
+
+      // Save fittest member.
+      void save() throws IOException
+      {
+         // Copy work to fittest.
+         Files.copy(new File(WORK_FILE_NAME).toPath(), new File(FITTEST_FILE_NAME).toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+         // Configure test cells with accumulated metamorphs.
+         String[] args = new String[2];
+         args[0]       = "-accumMetamorphs";
+         args[1]       = FITTEST_FILE_NAME;
+         Pathfinder p = new Pathfinder(args, 0);
+         for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+         {
+            for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+            {
+               p.cells[x][y].type = Cell.EMPTY;
+            }
+         }
+         Random r = new Random(testingSeed);
+         for (int i = 0; i < NUM_SOURCE_CELLS; i++)
+         {
+            int y = r.nextInt(Parameters.ORGANISM_DIMENSIONS.height);
+            p.cells[0][y].type = Pathfinder.SOURCE_CELL;
+         }
+         for (int i = 0; i < NUM_TARGET_CELLS; i++)
+         {
+            int y = r.nextInt(Parameters.ORGANISM_DIMENSIONS.height);
+            p.cells[Parameters.ORGANISM_DIMENSIONS.width - 1][y].type = Pathfinder.TARGET_CELL;
+         }
+         p.saveConfig();
+      }
    }
 
    // Path finder population.
@@ -327,13 +373,35 @@ public class PathfinderOptimizer
    int    trainingSeed;
    int    testingSeed;
 
+   // Testing target.
+   Pathfinder testingTarget;
+
    // Constructor.
-   public PathfinderOptimizer() throws IllegalArgumentException
+   @SuppressWarnings("all")
+   public PathfinderOptimizer() throws IllegalArgumentException, IOException
    {
       // Random numbers.
       randomizer   = new Random(Parameters.RANDOM_SEED);
       trainingSeed = randomizer.nextInt();
       testingSeed  = randomizer.nextInt();
+
+      // Create testing target.
+      testingTarget = new Pathfinder(new String[0], 0);
+      Random r = new Random(testingSeed);
+      for (int i = 0; i < NUM_SOURCE_CELLS; i++)
+      {
+         testingTarget.cells[0][r.nextInt(Parameters.ORGANISM_DIMENSIONS.height)].type = Pathfinder.SOURCE_CELL;
+      }
+      for (int i = 0; i < NUM_TARGET_CELLS; i++)
+      {
+         testingTarget.cells[Parameters.ORGANISM_DIMENSIONS.width - 1][r.nextInt(Parameters.ORGANISM_DIMENSIONS.height)].type = Pathfinder.TARGET_CELL;
+      }
+      for (int i = 0; i < NUM_UPDATE_STEPS; i++)
+      {
+         testingTarget.update();
+      }
+      System.out.println("Testing target:");
+      new PathfinderMember().printCells(testingTarget.cells);
 
       // Create path finder population.
       population = new ArrayList<PathfinderMember>();
@@ -419,30 +487,34 @@ public class PathfinderOptimizer
    // Run optimization.
    public void run() throws IOException
    {
-      // Create testing target.
-      Pathfinder target = new Pathfinder(new String[0], 0);
-      Random     r      = new Random(testingSeed);
-
-      for (int i = 0; i < NUM_SOURCE_CELLS; i++)
-      {
-         target.cells[0][r.nextInt(Parameters.ORGANISM_DIMENSIONS.height)].type = Pathfinder.SOURCE_CELL;
-      }
-      for (int i = 0; i < NUM_TARGET_CELLS; i++)
-      {
-         target.cells[Parameters.ORGANISM_DIMENSIONS.width - 1][r.nextInt(Parameters.ORGANISM_DIMENSIONS.height)].type = Pathfinder.TARGET_CELL;
-      }
-      for (int i = 0; i < NUM_UPDATE_STEPS; i++)
-      {
-         target.update();
-      }
-
       // Run members.
       System.out.println("Member\tFitness");
+      PathfinderMember fittestMember = null;
+      int              fittestIndex  = -1;
       for (int i = 0; i < population.size(); i++)
       {
          PathfinderMember member = population.get(i);
-         member.run(target);
-         System.out.println(i + "\t" + member.fitness);
+         member.run(testingTarget);
+         System.out.println(i + "\t" + member.fitness + "\n");
+         if ((fittestMember == null) || (member.fitness > fittestMember.fitness))
+         {
+            fittestIndex  = i;
+            fittestMember = member;
+            fittestMember.save();
+         }
+      }
+
+      System.out.println("Fittest member:\nMember\tFitness");
+      if (fittestIndex != -1)
+      {
+         System.out.println(fittestIndex + "\t" + fittestMember.fitness);
+         System.out.println("Parameters:");
+         Parameters.print();
+         System.out.println("Pathfinder saved to " + FITTEST_FILE_NAME);
+      }
+      else
+      {
+         System.out.println("Unavailable");
       }
    }
 

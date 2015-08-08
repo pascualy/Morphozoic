@@ -21,7 +21,9 @@ public class Gastrulation extends Organism
    public static final String ORGANISM_NAME = "morphozoic.applications.Gastrulation";
 
    // Options.
-   public static final String OPTIONS = "\n\t[-genMetamorphs <save file name>]\n\t[-execMetamorphs <load file name>]";
+   public static final String OPTIONS =
+      "\n\t[-genMetamorphs <save file name>]"
+      + "\n\t[-execMetamorphs <load file name> (overrides command-line parameters)]";
 
    // Constructor.
    public Gastrulation(String[] args, Integer id) throws IllegalArgumentException, IOException
@@ -72,7 +74,7 @@ public class Gastrulation extends Organism
          try
          {
             writer = new DataOutputStream(new FileOutputStream(genFilename));
-            Parameters.saveParms(writer);
+            Parameters.save(writer);
          }
          catch (Exception e)
          {
@@ -87,7 +89,7 @@ public class Gastrulation extends Organism
          try
          {
             reader = new DataInputStream(new FileInputStream(execFilename));
-            Parameters.loadParms(reader);
+            Parameters.load(reader);
             Metamorph m;
             if (Parameters.EXEC_METAMORPHS_WITH_SEARCH_TREE)
             {
