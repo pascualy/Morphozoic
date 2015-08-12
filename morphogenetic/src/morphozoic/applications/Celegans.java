@@ -18,13 +18,11 @@ import java.util.Vector;
 import javax.imageio.ImageIO;
 
 import rdtree.RDclient;
-import rdtree.RDtree.RDsearch;
 import morphozoic.Cell;
 import morphozoic.Metamorph;
 import morphozoic.Organism;
 import morphozoic.Orientation;
 import morphozoic.Parameters;
-import morphozoic.Organism.CellMetamorphs;
 
 // C elegans morphogenesis.
 public class Celegans extends Organism

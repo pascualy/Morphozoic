@@ -7,10 +7,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import morphozoic.Organism.CellMetamorphs;
-import rdtree.RDclient;
-import rdtree.RDtree.RDsearch;
-
 // Parameters.
 public class Parameters
 {

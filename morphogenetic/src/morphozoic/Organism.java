@@ -12,7 +12,6 @@ import java.util.Random;
 import java.util.Vector;
 
 import morphozoic.Morphogen.Neighborhood;
-import morphozoic.Parameters.METAMORPH_EXEC_OPTION;
 import rdtree.RDclient;
 import rdtree.RDtree;
 import rdtree.RDtree.RDsearch;
