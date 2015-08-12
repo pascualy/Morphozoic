@@ -91,20 +91,30 @@ public class Gastrulation extends Organism
             reader = new DataInputStream(new FileInputStream(execFilename));
             Parameters.load(reader);
             Metamorph m;
-            if (Parameters.EXEC_METAMORPHS_WITH_SEARCH_TREE)
+            switch (Parameters.METAMORPH_EXEC_TYPE)
             {
+            case LINEAR_SEARCH:
+               while ((m = Metamorph.load(reader)) != null)
+               {
+                  metamorphs.add(m);
+               }
+               break;
+
+            case SEARCH_TREE:
                while ((m = Metamorph.load(reader)) != null)
                {
                   metamorphs.add(m);
                   metamorphSearch.insert((RDclient)m);
                }
-            }
-            else
-            {
+               break;
+
+            case NEURAL_NETWORK:
                while ((m = Metamorph.load(reader)) != null)
                {
                   metamorphs.add(m);
                }
+               createMetamorphNNs();
+               break;
             }
          }
          catch (Exception e)

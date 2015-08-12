@@ -165,20 +165,9 @@ public class Pathfinder extends Organism
             if (!eof)
             {
                Metamorph m;
-               if (Parameters.EXEC_METAMORPHS_WITH_SEARCH_TREE)
+               while ((m = Metamorph.load(reader)) != null)
                {
-                  while ((m = Metamorph.load(reader)) != null)
-                  {
-                     metamorphs.add(m);
-                     metamorphSearch.insert((RDclient)m);
-                  }
-               }
-               else
-               {
-                  while ((m = Metamorph.load(reader)) != null)
-                  {
-                     metamorphs.add(m);
-                  }
+                  metamorphs.add(m);
                }
             }
          }
@@ -232,20 +221,30 @@ public class Pathfinder extends Organism
             if (!eof)
             {
                Metamorph m;
-               if (Parameters.EXEC_METAMORPHS_WITH_SEARCH_TREE)
+               switch (Parameters.METAMORPH_EXEC_TYPE)
                {
+               case LINEAR_SEARCH:
+                  while ((m = Metamorph.load(reader)) != null)
+                  {
+                     metamorphs.add(m);
+                  }
+                  break;
+
+               case SEARCH_TREE:
                   while ((m = Metamorph.load(reader)) != null)
                   {
                      metamorphs.add(m);
                      metamorphSearch.insert((RDclient)m);
                   }
-               }
-               else
-               {
+                  break;
+
+               case NEURAL_NETWORK:
                   while ((m = Metamorph.load(reader)) != null)
                   {
                      metamorphs.add(m);
                   }
+                  createMetamorphNNs();
+                  break;
                }
             }
          }

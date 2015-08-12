@@ -7,6 +7,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import morphozoic.Organism.CellMetamorphs;
+import rdtree.RDclient;
+import rdtree.RDtree.RDsearch;
+
 // Parameters.
 public class Parameters
 {
@@ -60,10 +64,15 @@ public class Parameters
    public static final int DEFAULT_MORPHOGENETIC_CELL_DISPERSION_MODULO = 1;
    public static int       MORPHOGENETIC_CELL_DISPERSION_MODULO         = DEFAULT_MORPHOGENETIC_CELL_DISPERSION_MODULO;
 
-   // Execute metamorphs using relative distance search tree?
-   // false = search all metamorphs.
-   public static final boolean DEFAULT_EXEC_METAMORPHS_WITH_SEARCH_TREE = true;
-   public static boolean       EXEC_METAMORPHS_WITH_SEARCH_TREE         = DEFAULT_EXEC_METAMORPHS_WITH_SEARCH_TREE;
+   // Metamorph execution options.
+   public static enum METAMORPH_EXEC_OPTION
+   {
+      LINEAR_SEARCH,
+      SEARCH_TREE,
+      NEURAL_NETWORK
+   }
+   public static final METAMORPH_EXEC_OPTION DEFAULT_METAMORPH_EXEC_TYPE = METAMORPH_EXEC_OPTION.NEURAL_NETWORK;
+   public static METAMORPH_EXEC_OPTION       METAMORPH_EXEC_TYPE         = DEFAULT_METAMORPH_EXEC_TYPE;
 
    // Default organism.
    public static final String DEFAULT_ORGANISM = "morphozoic.applications.Gastrulation";
@@ -99,6 +108,20 @@ public class Parameters
       writer.writeBoolean(PROBABILISTIC_METAMORPH);
       writer.writeBoolean(INHIBIT_COMPETING_MORPHOGENS);
       writer.writeInt(MORPHOGENETIC_CELL_DISPERSION_MODULO);
+      switch (METAMORPH_EXEC_TYPE)
+      {
+      case LINEAR_SEARCH:
+         writer.writeInt(0);
+         break;
+
+      case SEARCH_TREE:
+         writer.writeInt(1);
+         break;
+
+      case NEURAL_NETWORK:
+         writer.writeInt(2);
+         break;
+      }
       writer.writeInt(RANDOM_SEED);
       writer.flush();
    }
@@ -132,6 +155,21 @@ public class Parameters
       PROBABILISTIC_METAMORPH              = reader.readBoolean();
       INHIBIT_COMPETING_MORPHOGENS         = reader.readBoolean();
       MORPHOGENETIC_CELL_DISPERSION_MODULO = reader.readInt();
+      n = reader.readInt();
+      switch (n)
+      {
+      case 0:
+         METAMORPH_EXEC_TYPE = METAMORPH_EXEC_OPTION.LINEAR_SEARCH;
+         break;
+
+      case 1:
+         METAMORPH_EXEC_TYPE = METAMORPH_EXEC_OPTION.SEARCH_TREE;
+         break;
+
+      case 2:
+         METAMORPH_EXEC_TYPE = METAMORPH_EXEC_OPTION.NEURAL_NETWORK;
+         break;
+      }
       RANDOM_SEED = reader.readInt();
    }
 
@@ -163,7 +201,21 @@ public class Parameters
       System.out.println("PROBABILISTIC_METAMORPH = " + PROBABILISTIC_METAMORPH);
       System.out.println("INHIBIT_COMPETING_MORPHOGENS = " + INHIBIT_COMPETING_MORPHOGENS);
       System.out.println("MORPHOGENETIC_CELL_DISPERSION_MODULO = " + MORPHOGENETIC_CELL_DISPERSION_MODULO);
-      System.out.println("EXEC_METAMORPHS_WITH_SEARCH_TREE = " + EXEC_METAMORPHS_WITH_SEARCH_TREE);
+      System.out.print("METAMORPH_EXEC_TYPE = ");
+      switch (METAMORPH_EXEC_TYPE)
+      {
+      case LINEAR_SEARCH:
+         System.out.println("LINEAR_SEARCH");
+         break;
+
+      case SEARCH_TREE:
+         System.out.println("SEARCH_TREE");
+         break;
+
+      case NEURAL_NETWORK:
+         System.out.println("NEURAL_NETWORK");
+         break;
+      }
       System.out.println("DEFAULT_ORGANISM = " + DEFAULT_ORGANISM);
       System.out.println("RANDOM_SEED = " + RANDOM_SEED);
    }

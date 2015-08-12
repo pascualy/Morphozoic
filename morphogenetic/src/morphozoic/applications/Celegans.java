@@ -18,11 +18,13 @@ import java.util.Vector;
 import javax.imageio.ImageIO;
 
 import rdtree.RDclient;
+import rdtree.RDtree.RDsearch;
 import morphozoic.Cell;
 import morphozoic.Metamorph;
 import morphozoic.Organism;
 import morphozoic.Orientation;
 import morphozoic.Parameters;
+import morphozoic.Organism.CellMetamorphs;
 
 // C elegans morphogenesis.
 public class Celegans extends Organism
@@ -176,20 +178,30 @@ public class Celegans extends Organism
             if (!eof)
             {
                Metamorph m;
-               if (Parameters.EXEC_METAMORPHS_WITH_SEARCH_TREE)
+               switch (Parameters.METAMORPH_EXEC_TYPE)
                {
+               case LINEAR_SEARCH:
+                  while ((m = Metamorph.load(reader)) != null)
+                  {
+                     metamorphs.add(m);
+                  }
+                  break;
+
+               case SEARCH_TREE:
                   while ((m = Metamorph.load(reader)) != null)
                   {
                      metamorphs.add(m);
                      metamorphSearch.insert((RDclient)m);
                   }
-               }
-               else
-               {
+                  break;
+
+               case NEURAL_NETWORK:
                   while ((m = Metamorph.load(reader)) != null)
                   {
                      metamorphs.add(m);
                   }
+                  createMetamorphNNs();
+                  break;
                }
             }
          }

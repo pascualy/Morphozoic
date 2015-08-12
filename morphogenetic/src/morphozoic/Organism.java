@@ -11,9 +11,18 @@ import java.util.Collections;
 import java.util.Random;
 import java.util.Vector;
 
+import morphozoic.Morphogen.Neighborhood;
+import morphozoic.Parameters.METAMORPH_EXEC_OPTION;
 import rdtree.RDclient;
 import rdtree.RDtree;
 import rdtree.RDtree.RDsearch;
+import weka.classifiers.Evaluation;
+import weka.classifiers.functions.MultilayerPerceptron;
+import weka.core.Attribute;
+import weka.core.FastVector;
+import weka.core.Instance;
+import weka.core.Instances;
+import weka.core.Utils;
 
 // Organism.
 public class Organism
@@ -32,6 +41,11 @@ public class Organism
 
    // Metamorph search tree.
    public RDtree metamorphSearch;
+
+   // Metamorph neural networks
+   public            MultilayerPerceptron[][] metamorphNNs;
+   public FastVector metamorphNNattributeNames;
+   public            Instances[][] metamorphInstances;
 
    // Cells editable?
    public boolean isEditable = false;
@@ -76,10 +90,13 @@ public class Organism
          }
       }
 
-      predecessorCells = new Cell[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
-      metamorphs       = new Vector<Metamorph>();
-      metamorphSearch  = new RDtree();
-      tick             = 0;
+      predecessorCells          = new Cell[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
+      metamorphs                = new Vector<Metamorph>();
+      metamorphSearch           = new RDtree();
+      metamorphNNs              = new MultilayerPerceptron[Parameters.METAMORPH_DIMENSION][Parameters.METAMORPH_DIMENSION];
+      metamorphNNattributeNames = createAttrNames();
+      metamorphInstances        = new Instances[Parameters.METAMORPH_DIMENSION][Parameters.METAMORPH_DIMENSION];
+      tick = 0;
    }
 
 
@@ -193,6 +210,151 @@ public class Organism
    }
 
 
+   // Create metamorph neural network attribute names.
+   public FastVector createAttrNames()
+   {
+      int        n         = Parameters.NEIGHBORHOOD_DIMENSION * Parameters.NEIGHBORHOOD_DIMENSION;
+      FastVector attrNames = new FastVector();
+
+      for (int i = 0; i < Parameters.NUM_NEIGHBORHOODS; i++)
+      {
+         for (int j = 0; j < n; j++)
+         {
+            for (int k = 0; k < Parameters.NUM_CELL_TYPES; k++)
+            {
+               attrNames.addElement(new Attribute(i + "-" + j + "-" + k));
+            }
+         }
+      }
+      FastVector typeVals = new FastVector();
+      typeVals.addElement("empty");
+      for (int i = 0; i < Parameters.NUM_CELL_TYPES; i++)
+      {
+         typeVals.addElement(i + "");
+      }
+      attrNames.addElement(new Attribute("type", typeVals));
+      return(attrNames);
+   }
+
+
+   // Create and train metamorph neural networks.
+   public void createMetamorphNNs() throws Exception
+   {
+      // Create classifier for each metamorph target cell.
+      int n = Parameters.NEIGHBORHOOD_DIMENSION * Parameters.NEIGHBORHOOD_DIMENSION;
+
+      for (int x = 0; x < Parameters.METAMORPH_DIMENSION; x++)
+      {
+         for (int y = 0; y < Parameters.METAMORPH_DIMENSION; y++)
+         {
+            // Create instances.
+            metamorphInstances[x][y] = new Instances(n + "", metamorphNNattributeNames, 0);
+            for (Metamorph m : metamorphs)
+            {
+               metamorphInstances[x][y].add(createInstance(metamorphInstances[x][y], m, x, y));
+            }
+            metamorphInstances[x][y].setClassIndex(metamorphInstances[x][y].numAttributes() - 1);
+
+            // Create and train the neural network.
+            MultilayerPerceptron mlp = new MultilayerPerceptron();
+            metamorphNNs[x][y] = mlp;
+            mlp.setLearningRate(0.1);
+            mlp.setMomentum(0.2);
+            mlp.setTrainingTime(2000);
+            mlp.setHiddenLayers("20");
+            mlp.setOptions(Utils.splitOptions("-L 0.1 -M 0.2 -N 2000 -V 0 -S 0 -E 20 -H 20"));
+            mlp.buildClassifier(metamorphInstances[x][y]);
+
+            // Evaluate the network.
+            Evaluation eval = new Evaluation(metamorphInstances[x][y]);
+            eval.evaluateModel(mlp, metamorphInstances[x][y]);
+            System.out.println("x=" + x + ",y=" + y);
+            System.out.println(eval.errorRate());
+            System.out.println(eval.toSummaryString());
+            eval.crossValidateModel(mlp, metamorphInstances[x][y], 10, new Random(1));
+         }
+      }
+   }
+
+
+   // Create instance.
+   Instance createInstance(Instances instances, Metamorph m, int x, int y)
+   {
+      int n = Parameters.NEIGHBORHOOD_DIMENSION * Parameters.NEIGHBORHOOD_DIMENSION;
+
+      double[]  attrValues = new double[instances.numAttributes()];
+      int a = 0;
+      for (int i = 0; i < Parameters.NUM_NEIGHBORHOODS; i++)
+      {
+         for (int j = 0; j < n; j++)
+         {
+            Neighborhood.Sector t = m.morphogen.neighborhoods.get(i).sectors[j];
+            for (int k = 0; k < t.typeDensities.length; k++)
+            {
+               attrValues[a] = t.typeDensities[k];
+               a++;
+            }
+         }
+      }
+      if (m.targetCells[x][y].type == Cell.EMPTY)
+      {
+         attrValues[a] = instances.attribute(a).indexOfValue("empty");
+      }
+      else
+      {
+         attrValues[a] = instances.attribute(a).indexOfValue(m.targetCells[x][y].type + "");
+      }
+      a++;
+      return(new Instance(1.0, attrValues));
+   }
+
+
+   // Classify morphogen with metamorph neural networks to produce a metamorph.
+   public CellMetamorphs classifyMorphogen(Morphogen morphogen, Cell cell)
+   {
+      Metamorph metamorph = new Metamorph(morphogen, cell);
+      float     dist      = 0.0f;
+
+      for (int x = 0; x < Parameters.METAMORPH_DIMENSION; x++)
+      {
+         for (int y = 0; y < Parameters.METAMORPH_DIMENSION; y++)
+         {
+            try
+            {
+               // Classify.
+               Instance instance        = createInstance(metamorphInstances[x][y], metamorph, x, y);
+               int      predictionIndex = (int)metamorphNNs[x][y].classifyInstance(instance);
+
+               // Get the predicted class label from the predictionIndex.
+               String predictedClassLabel = metamorphInstances[x][y].classAttribute().value(predictionIndex);
+               if (predictedClassLabel.equals("empty"))
+               {
+                  metamorph.targetCells[x][y].type = Cell.EMPTY;
+               }
+               else
+               {
+                  metamorph.targetCells[x][y].type = Integer.parseInt(predictedClassLabel);
+               }
+
+               // Get the prediction probability distribution.
+               double[] predictionDistribution = metamorphNNs[x][y].distributionForInstance(instance);
+
+               // Get morphogen distance from prediction probability.
+               dist += (1.0f - (float)predictionDistribution[predictionIndex]);
+            }
+            catch (Exception e)
+            {
+               System.err.println("Error classifying morphogen:");
+               e.printStackTrace();
+            }
+         }
+      }
+      CellMetamorphs m = new CellMetamorphs();
+      m.add(metamorph, dist);
+      return(m);
+   }
+
+
    // Execution helper: Metamorph morphogen distance.
    public class MetamorphDistance implements Comparable<MetamorphDistance>
    {
@@ -273,26 +435,9 @@ public class Organism
             {
                if ((predecessorCells[x][y].type != Cell.EMPTY) && morphogeneticCell(x, y))
                {
-                  if (Parameters.EXEC_METAMORPHS_WITH_SEARCH_TREE)
+                  switch (Parameters.METAMORPH_EXEC_TYPE)
                   {
-                     Metamorph m          = new Metamorph(predecessorCells[x][y].morphogen, cells[x][y]);
-                     RDsearch  searchList = metamorphSearch.search((RDclient)m, Parameters.MAX_CELL_METAMORPHS, n);
-                     for ( ; searchList != null; searchList = searchList.srchnext)
-                     {
-                        float d = searchList.distance;
-                        if (d <= Parameters.MAX_MORPHOGEN_COMPARE_DISTANCE)
-                        {
-                           m = (Metamorph)searchList.node.client;
-                           if (cellMorphs[x][y] == null)
-                           {
-                              cellMorphs[x][y] = new CellMetamorphs();
-                           }
-                           cellMorphs[x][y].add(m, d);
-                        }
-                     }
-                  }
-                  else
-                  {
+                  case LINEAR_SEARCH:
                      for (int i = 0, j = randomizer.nextInt(n); i < n; i++, j = (j + 1) % n)
                      {
                         Metamorph m = metamorphs.get(j);
@@ -306,6 +451,29 @@ public class Organism
                            cellMorphs[x][y].add(m, d);
                         }
                      }
+                     break;
+
+                  case SEARCH_TREE:
+                     Metamorph m = new Metamorph(predecessorCells[x][y].morphogen, cells[x][y]);
+                     RDsearch searchList = metamorphSearch.search((RDclient)m, Parameters.MAX_CELL_METAMORPHS, n);
+                     for ( ; searchList != null; searchList = searchList.srchnext)
+                     {
+                        float d = searchList.distance;
+                        if (d <= Parameters.MAX_MORPHOGEN_COMPARE_DISTANCE)
+                        {
+                           m = (Metamorph)searchList.node.client;
+                           if (cellMorphs[x][y] == null)
+                           {
+                              cellMorphs[x][y] = new CellMetamorphs();
+                           }
+                           cellMorphs[x][y].add(m, d);
+                        }
+                     }
+                     break;
+
+                  case NEURAL_NETWORK:
+                     cellMorphs[x][y] = classifyMorphogen(predecessorCells[x][y].morphogen, cells[x][y]);
+                     break;
                   }
                }
             }
