@@ -14,9 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Random;
 import java.util.Vector;
-
 import javax.imageio.ImageIO;
-
 import rdtree.RDclient;
 import morphozoic.Cell;
 import morphozoic.Metamorph;

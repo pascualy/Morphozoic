@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 import java.util.Vector;
-
 import morphozoic.Morphogen.Neighborhood;
 import rdtree.RDclient;
 import rdtree.RDtree;

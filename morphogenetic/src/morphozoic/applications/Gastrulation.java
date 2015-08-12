@@ -8,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Random;
-
 import rdtree.RDclient;
 import morphozoic.Cell;
 import morphozoic.Metamorph;
