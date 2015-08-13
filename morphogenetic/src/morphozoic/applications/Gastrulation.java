@@ -89,6 +89,7 @@ public class Gastrulation extends Organism
          {
             reader = new DataInputStream(new FileInputStream(execFilename));
             Parameters.load(reader);
+            init();
             Metamorph m;
             switch (Parameters.METAMORPH_EXEC_TYPE)
             {

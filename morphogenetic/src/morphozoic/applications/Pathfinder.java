@@ -144,6 +144,7 @@ public class Pathfinder extends Organism
          {
             reader = new DataInputStream(new FileInputStream(accumFilename));
             Parameters.load(reader);
+            init();
             int     x, y, t;
             boolean eof = false;
             try
@@ -200,6 +201,7 @@ public class Pathfinder extends Organism
          {
             reader = new DataInputStream(new FileInputStream(execFilename));
             Parameters.load(reader);
+            init();
             int     x, y, t;
             boolean eof = false;
             try

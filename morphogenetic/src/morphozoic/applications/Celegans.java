@@ -148,6 +148,7 @@ public class Celegans extends Organism
          {
             reader = new DataInputStream(new FileInputStream(execFilename));
             Parameters.load(reader);
+            init();
             int     x, y;
             boolean eof = false;
             for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)

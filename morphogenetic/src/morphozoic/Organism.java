@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 import java.util.Vector;
+
 import morphozoic.Morphogen.Neighborhood;
 import rdtree.RDclient;
 import rdtree.RDtree;
@@ -73,7 +74,7 @@ public class Organism
 
 
    // Initialize.
-   private void init()
+   public void init()
    {
       // Random numbers.
       randomizer = new Random(Parameters.RANDOM_SEED);
