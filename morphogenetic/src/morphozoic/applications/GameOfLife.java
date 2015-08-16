@@ -30,7 +30,7 @@ public class GameOfLife extends Organism
    public GameOfLife(String[] args, Integer id) throws IllegalArgumentException, IOException
    {
       String usage = "Usage: java morphozoic.Morphozoic\n\t[-organism " + ORGANISM_NAME + "]" + morphozoic.Morphozoic.OPTIONS + OPTIONS;
-	   
+
       // Random numbers.
       randomizer = new Random(Parameters.RANDOM_SEED);
 
@@ -91,7 +91,7 @@ public class GameOfLife extends Organism
          {
             reader = new DataInputStream(new FileInputStream(execFilename));
             Parameters.load(reader);
-            init();           
+            init();
             int     x, y;
             boolean eof = false;
             for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
@@ -114,7 +114,7 @@ public class GameOfLife extends Organism
             catch (EOFException e)
             {
                eof = true;
-            }           
+            }
             if (!eof)
             {
                Metamorph m;
@@ -143,7 +143,7 @@ public class GameOfLife extends Organism
                   createMetamorphNNs();
                   break;
                }
-            }          
+            }
          }
          catch (Exception e)
          {

@@ -5,6 +5,7 @@ package morphozoic;
 import java.awt.Color;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,6 +23,7 @@ import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Utils;
+import weka.core.converters.ArffSaver;
 
 // Organism.
 public class Organism
@@ -41,10 +43,11 @@ public class Organism
    // Metamorph search tree.
    public RDtree metamorphSearch;
 
-   // Metamorph neural networks
-   public            MultilayerPerceptron[][] metamorphNNs;
-   public FastVector metamorphNNattributeNames;
-   public            Instances[][] metamorphInstances;
+   // Metamorph neural networks.
+   public                      MultilayerPerceptron[][] metamorphNNs;
+   public FastVector           metamorphNNattributeNames;
+   public                      Instances[][] metamorphInstances;
+   public static final boolean saveMetamorphInstances = false;
 
    // Cells editable?
    public boolean isEditable = false;
@@ -263,6 +266,15 @@ public class Organism
             mlp.setHiddenLayers("20");
             mlp.setOptions(Utils.splitOptions("-L 0.1 -M 0.2 -N 2000 -V 0 -S 0 -E 20 -H 20"));
             mlp.buildClassifier(metamorphInstances[x][y]);
+
+            // Save training instances?
+            if (saveMetamorphInstances)
+            {
+               ArffSaver saver = new ArffSaver();
+               saver.setInstances(metamorphInstances[x][y]);
+               saver.setFile(new File("metamorphInstances_" + x + "_" + y + ".arff"));
+               saver.writeBatch();
+            }
 
             // Evaluate the network.
             Evaluation eval = new Evaluation(metamorphInstances[x][y]);
