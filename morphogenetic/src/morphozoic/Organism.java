@@ -19,6 +19,7 @@ import rdtree.RDtree.RDsearch;
 import weka.classifiers.Evaluation;
 import weka.classifiers.functions.MultilayerPerceptron;
 import weka.core.Attribute;
+import weka.core.Debug;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -48,6 +49,7 @@ public class Organism
    public FastVector           metamorphNNattributeNames;
    public                      Instances[][] metamorphInstances;
    public static final boolean saveMetamorphInstances = false;
+   public static final boolean saveMetamorphNNs       = false;
 
    // Cells editable?
    public boolean isEditable = false;
@@ -274,6 +276,12 @@ public class Organism
                saver.setInstances(metamorphInstances[x][y]);
                saver.setFile(new File("metamorphInstances_" + x + "_" + y + ".arff"));
                saver.writeBatch();
+            }
+
+            // Save networks?
+            if (saveMetamorphNNs)
+            {
+               Debug.saveToFile("metamorphNN_" + x + "_" + y + ".dat", mlp);
             }
 
             // Evaluate the network.

@@ -23,7 +23,7 @@ public class Parameters
    public static int       NEIGHBORHOOD_DIMENSION         = DEFAULT_NEIGHBORHOOD_DIMENSION;
 
    // Number of neighborhoods.
-   public static final int DEFAULT_NUM_NEIGHBORHOODS = 3;
+   public static final int DEFAULT_NUM_NEIGHBORHOODS = 2;
    public static int       NUM_NEIGHBORHOODS         = DEFAULT_NUM_NEIGHBORHOODS;
 
    // Nested neighborhood importance weights.

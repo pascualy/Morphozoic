@@ -106,12 +106,6 @@ public class Pathfinder extends Organism
          }
       }
 
-      if (Parameters.NUM_CELL_TYPES != 3)
-      {
-         System.err.println("Number of cell types must equal 3");
-         System.err.println(usage);
-         throw new IllegalArgumentException(usage);
-      }
       if ((genFilename != null) && (execFilename != null))
       {
          System.err.println("Mutually exclusive arguments: -genMetamorphs and -execMetamorphs");
@@ -127,6 +121,12 @@ public class Pathfinder extends Organism
       if ((accumFilename != null) && (execFilename != null))
       {
          System.err.println("Mutually exclusive arguments: -accumMetamorphs and -execMetamorphs");
+         System.err.println(usage);
+         throw new IllegalArgumentException(usage);
+      }
+      if ((accumFilename == null) && (execFilename == null) && (Parameters.NUM_CELL_TYPES != 3))
+      {
+         System.err.println("Number of cell types must equal 3");
          System.err.println(usage);
          throw new IllegalArgumentException(usage);
       }
