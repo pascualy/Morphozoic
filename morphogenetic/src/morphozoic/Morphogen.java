@@ -316,6 +316,39 @@ public class Morphogen
    }
 
 
+   // Clone.
+   public Morphogen clone()
+   {
+      Morphogen morphogen = new Morphogen();
+
+      morphogen.sourceCells = new Cell[Parameters.NEIGHBORHOOD_DIMENSION][Parameters.NEIGHBORHOOD_DIMENSION];
+      for (int x = 0; x < Parameters.NEIGHBORHOOD_DIMENSION; x++)
+      {
+         for (int y = 0; y < Parameters.NEIGHBORHOOD_DIMENSION; y++)
+         {
+            morphogen.sourceCells[x][y] = sourceCells[x][y].clone();
+         }
+      }
+      morphogen.neighborhoods = new Vector<Neighborhood>();
+      for (int n = 0; n < neighborhoods.size(); n++)
+      {
+         Neighborhood neighborhood = new Neighborhood();
+         morphogen.neighborhoods.add(neighborhood);
+         for (int i = 0; i < neighborhoods.get(n).sectors.length; i++)
+         {
+            Neighborhood.Sector s1 = neighborhoods.get(n).sectors[i];
+            Neighborhood.Sector s2 = neighborhood.addSector(i, s1.dx, s1.dy, s1.d);
+            for (int j = 0; j < s1.typeDensities.length; j++)
+            {
+               s2.typeDensities[j] = s1.typeDensities[j];
+            }
+         }
+      }
+      morphogen.hashCode = hashCode;
+      return(morphogen);
+   }
+
+
    // Print.
    public void print()
    {

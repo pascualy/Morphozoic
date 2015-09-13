@@ -11,6 +11,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
+
 import rdtree.RDclient;
 import morphozoic.Cell;
 import morphozoic.Metamorph;
@@ -59,7 +60,7 @@ public class Pathfinder extends Organism
             if (i == args.length)
             {
                System.err.println(usage);
-               return;
+               throw new IllegalArgumentException(usage);
             }
             genFilename = args[i];
          }
@@ -69,7 +70,7 @@ public class Pathfinder extends Organism
             if (i == args.length)
             {
                System.err.println(usage);
-               return;
+               throw new IllegalArgumentException(usage);
             }
             accumFilename = args[i];
          }
@@ -79,7 +80,7 @@ public class Pathfinder extends Organism
             if (i == args.length)
             {
                System.err.println(usage);
-               return;
+               throw new IllegalArgumentException(usage);
             }
             execFilename = args[i];
          }
@@ -89,14 +90,14 @@ public class Pathfinder extends Organism
             if (i == args.length)
             {
                System.err.println(usage);
-               return;
+               throw new IllegalArgumentException(usage);
             }
             PATH_FINDING_NEIGHBORHOOD_DIMENSION = Integer.parseInt(args[i]);
             if ((PATH_FINDING_NEIGHBORHOOD_DIMENSION <= 0) || ((PATH_FINDING_NEIGHBORHOOD_DIMENSION % 2) != 1))
             {
                System.err.println("Path finding neighborhood dimension must be positive odd number");
                System.err.println(usage);
-               return;
+               throw new IllegalArgumentException(usage);
             }
          }
          else
@@ -191,7 +192,7 @@ public class Pathfinder extends Organism
          {
             System.err.println("Cannot save file " + genFilename +
                                ":" + e.getMessage());
-            throw new IOException("Cannot open save file " + genFilename +
+            throw new IOException("Cannot save file " + genFilename +
                                   ":" + e.getMessage());
          }
       }

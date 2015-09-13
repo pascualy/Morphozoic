@@ -1,0 +1,11 @@
+java -classpath morphozoic.jar morphozoic.applications.MorphEvolver  \
+-organismDimensions 15 15 \
+-numCellTypes 1 \
+-populationSize 50 \
+-fitPopulationSize 10 \
+-numEvolveEpochs 10 \
+-numEpochUpdateSteps 1 \
+-numGenerations 50 \
+-fitGenerations 10 \
+-numMatingOffspring 20 \
+-randomSeed 54

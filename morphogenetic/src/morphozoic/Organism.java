@@ -10,9 +10,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
-import java.util.Vector;
-
 import morphozoic.Morphogen.Neighborhood;
+import morphozoic.Parameters.METAMORPH_EXEC_OPTION;
 import rdtree.RDclient;
 import rdtree.RDtree;
 import rdtree.RDtree.RDsearch;
@@ -39,7 +38,7 @@ public class Organism
    public Cell[][] predecessorCells;
 
    // Metamorphs.
-   public Vector<Metamorph> metamorphs;
+   public ArrayList<Metamorph> metamorphs;
 
    // Metamorph search tree.
    public RDtree metamorphSearch;
@@ -86,6 +85,20 @@ public class Organism
 
       // Create cells.
       cells = new Cell[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
+      clearCells();
+
+      predecessorCells          = new Cell[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
+      metamorphs                = new ArrayList<Metamorph>();
+      metamorphSearch           = new RDtree();
+      metamorphNNs              = new MultilayerPerceptron[Parameters.METAMORPH_DIMENSION][Parameters.METAMORPH_DIMENSION];
+      metamorphNNattributeNames = createAttrNames();
+      metamorphInstances        = new Instances[Parameters.METAMORPH_DIMENSION][Parameters.METAMORPH_DIMENSION];
+   }
+
+
+   // Clear cells.
+   public void clearCells()
+   {
       for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
       {
          for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
@@ -93,13 +106,6 @@ public class Organism
             cells[x][y] = new Cell(Cell.EMPTY, x, y, Orientation.NORTH, this);
          }
       }
-
-      predecessorCells          = new Cell[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
-      metamorphs                = new Vector<Metamorph>();
-      metamorphSearch           = new RDtree();
-      metamorphNNs              = new MultilayerPerceptron[Parameters.METAMORPH_DIMENSION][Parameters.METAMORPH_DIMENSION];
-      metamorphNNattributeNames = createAttrNames();
-      metamorphInstances        = new Instances[Parameters.METAMORPH_DIMENSION][Parameters.METAMORPH_DIMENSION];
       tick = 0;
    }
 
@@ -442,6 +448,12 @@ public class Organism
    {
       int x, y, x2, y2, n;
 
+      // Clear metamorph usages.
+      for (Metamorph m : metamorphs)
+      {
+         m.usage = false;
+      }
+
       // Match metamorphs to cell morphogens.
       CellMetamorphs[][] cellMorphs =
          new CellMetamorphs[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
@@ -486,6 +498,7 @@ public class Organism
                               cellMorphs[x][y] = new CellMetamorphs();
                            }
                            cellMorphs[x][y].add(m, d);
+                           m.usage = true;
                         }
                      }
                      break;
@@ -493,6 +506,22 @@ public class Organism
                   case NEURAL_NETWORK:
                      cellMorphs[x][y] = classifyMorphogen(predecessorCells[x][y].morphogen, cells[x][y]);
                      break;
+                  }
+               }
+            }
+         }
+         if (Parameters.METAMORPH_EXEC_TYPE == METAMORPH_EXEC_OPTION.LINEAR_SEARCH)
+         {
+            for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+            {
+               for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+               {
+                  if (cellMorphs[x][y] != null)
+                  {
+                     for (MetamorphDistance metamorphDistance : cellMorphs[x][y].morphs)
+                     {
+                        metamorphDistance.metamorph.usage = true;
+                     }
                   }
                }
             }
@@ -522,13 +551,11 @@ public class Organism
             Metamorph morph = null;
             int       cx    = 0;
             int       cy    = 0;
-            for (x = 0, x2 = randomizer.nextInt(Parameters.ORGANISM_DIMENSIONS.width);
-                 x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+            for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
             {
-               for (y = 0, y2 = randomizer.nextInt(Parameters.ORGANISM_DIMENSIONS.height);
-                    y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+               for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
                {
-                  CellMetamorphs m = cellMorphs[x2][y2];
+                  CellMetamorphs m = cellMorphs[x][y];
                   if ((m != null) && !m.mark)
                   {
                      float d = m.morphs.get(0).morphogenDistance;
@@ -536,13 +563,11 @@ public class Organism
                      {
                         dist  = d;
                         morph = m.morphs.get(0).metamorph;
-                        cx    = x2;
-                        cy    = y2;
+                        cx    = x;
+                        cy    = y;
                      }
                   }
-                  y2 = (y2 + 1) % Parameters.ORGANISM_DIMENSIONS.height;
                }
-               x2 = (x2 + 1) % Parameters.ORGANISM_DIMENSIONS.width;
             }
             if (morph != null)
             {
@@ -591,13 +616,11 @@ public class Organism
          Metamorph morph = null;
          int       cx    = 0;
          int       cy    = 0;
-         for (x = 0, x2 = randomizer.nextInt(Parameters.ORGANISM_DIMENSIONS.width);
-              x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+         for (x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
          {
-            for (y = 0, y2 = randomizer.nextInt(Parameters.ORGANISM_DIMENSIONS.height);
-                 y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+            for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
             {
-               CellMetamorphs m = cellMorphs[x2][y2];
+               CellMetamorphs m = cellMorphs[x][y];
                if ((m != null) && !m.mark)
                {
                   float d = m.morphs.get(0).morphogenDistance;
@@ -605,13 +628,11 @@ public class Organism
                   {
                      dist  = d;
                      morph = m.morphs.get(0).metamorph;
-                     cx    = x2;
-                     cy    = y2;
+                     cx    = x;
+                     cy    = y;
                   }
                }
-               y2 = (y2 + 1) % Parameters.ORGANISM_DIMENSIONS.height;
             }
-            x2 = (x2 + 1) % Parameters.ORGANISM_DIMENSIONS.width;
          }
          if (morph != null)
          {

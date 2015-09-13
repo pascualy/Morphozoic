@@ -42,7 +42,7 @@ public class Gastrulation extends Organism
             if (i == args.length)
             {
                System.err.println(usage);
-               return;
+               throw new IllegalArgumentException(usage);
             }
             genFilename = args[i];
          }
@@ -52,7 +52,7 @@ public class Gastrulation extends Organism
             if (i == args.length)
             {
                System.err.println(usage);
-               return;
+               throw new IllegalArgumentException(usage);
             }
             execFilename = args[i];
          }
@@ -80,7 +80,7 @@ public class Gastrulation extends Organism
          {
             System.err.println("Cannot save file " + genFilename +
                                ":" + e.getMessage());
-            throw new IOException("Cannot open save file " + genFilename +
+            throw new IOException("Cannot save file " + genFilename +
                                   ":" + e.getMessage());
          }
       }
@@ -145,7 +145,7 @@ public class Gastrulation extends Organism
          // Force update.
          x = Parameters.ORGANISM_DIMENSIONS.width / 2;
          y = Parameters.ORGANISM_DIMENSIONS.height / 2;
-         if (tick < 9)
+         if (tick < 4)
          {
             s  = (tick * 2) + 1;
             s2 = s / 2;
@@ -153,7 +153,7 @@ public class Gastrulation extends Organism
             {
                for (x2 = 0; x2 < s; x2++)
                {
-                  cells[x + x2 - s2][y + y2 - s2].type = randomizer.nextInt(Parameters.NUM_CELL_TYPES);
+                  cells[x + x2 - s2][y + y2 - s2].type = 0;
                }
             }
             s -= 2;
@@ -166,17 +166,17 @@ public class Gastrulation extends Organism
                }
             }
          }
-         else if (tick < 20)
+         else if (tick < 8)
          {
-            s = x + 4;
-            int t = (9 - tick) + 7;
-            for (x2 = x - 3; x2 < s; x2++)
+            s = x + 2;
+            int t = (4 - tick) + 2;
+            for (x2 = x - 1; x2 < s; x2++)
             {
-               cells[x2][y - t].type = randomizer.nextInt(Parameters.NUM_CELL_TYPES);
+               cells[x2][y - t].type = 0;
             }
-            s = x + 3;
+            s = x + 1;
             t++;
-            for (x2 = x - 2; x2 < s; x2++)
+            for (x2 = x; x2 < s; x2++)
             {
                cells[x2][y - t].type = Cell.EMPTY;
             }

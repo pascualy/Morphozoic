@@ -24,6 +24,9 @@ public class Metamorph implements RDclient
    // Hash code.
    public int hashCode;
 
+   // Usage flag.
+   public boolean usage;
+
    // Constructors.
    public Metamorph(Morphogen morphogen, Cell cell)
    {
@@ -45,6 +48,7 @@ public class Metamorph implements RDclient
          }
       }
       hashCode = getHashCode();
+      usage    = false;
    }
 
 
@@ -53,6 +57,7 @@ public class Metamorph implements RDclient
       this.morphogen   = morphogen;
       this.targetCells = targetCells;
       hashCode         = getHashCode();
+      usage            = false;
    }
 
 
@@ -286,6 +291,75 @@ public class Metamorph implements RDclient
       catch (EOFException e) {
          return(null);
       }
+   }
+
+
+   // Clone.
+   public Metamorph clone()
+   {
+      return(new Metamorph(morphogen.clone(), cloneTargetCells()));
+   }
+
+
+   // Clone target cells.
+   public Cell[][] cloneTargetCells()
+   {
+      Cell[][] targetCells = new Cell[Parameters.METAMORPH_DIMENSION][Parameters.METAMORPH_DIMENSION];
+      for (int x = 0; x < Parameters.METAMORPH_DIMENSION; x++)
+      {
+         for (int y = 0; y < Parameters.METAMORPH_DIMENSION; y++)
+         {
+            targetCells[x][y] = this.targetCells[x][y].clone();
+         }
+      }
+      return(targetCells);
+   }
+
+
+   // Mutate.
+   public Metamorph mutate(Random randomizer, float maxCellTypeDensity)
+   {
+      // Clone metamorph.
+      Metamorph metamorph = clone();
+
+      // Mutate.
+      int r = randomizer.nextInt(metamorph.morphogen.neighborhoods.size() + 1);
+
+      if (r == 0)
+      {
+         // Mutate random target cell type.
+         int t = randomizer.nextInt(Parameters.NUM_CELL_TYPES + 1);
+         int x = randomizer.nextInt(Parameters.METAMORPH_DIMENSION);
+         int y = randomizer.nextInt(Parameters.METAMORPH_DIMENSION);
+         if (t == 0)
+         {
+            metamorph.targetCells[x][y].type = Cell.EMPTY;
+         }
+         else
+         {
+            metamorph.targetCells[x][y].type = t - 1;
+         }
+      }
+      else
+      {
+         // Mutate random neighborhood sector type density.
+         int n = r - 1;
+         int s = randomizer.nextInt(metamorph.morphogen.neighborhoods.get(n).sectors.length);
+         int t = randomizer.nextInt(Parameters.NUM_CELL_TYPES);
+         if (n == 0)
+         {
+            for (int i = 0; i < Parameters.NUM_CELL_TYPES; i++)
+            {
+               metamorph.morphogen.neighborhoods.get(n).sectors[s].typeDensities[i] = 0.0f;
+            }
+            metamorph.morphogen.neighborhoods.get(n).sectors[s].typeDensities[t] = 1.0f;
+         }
+         else
+         {
+            metamorph.morphogen.neighborhoods.get(n).sectors[s].typeDensities[t] = randomizer.nextFloat() * maxCellTypeDensity;
+         }
+      }
+      return(metamorph);
    }
 
 

@@ -20,4 +20,18 @@ Path finder application:
 java -jar morphozoic.jar -organism morphozoic.applications.Pathfinder
 
 Path finder optimization:
-java -classpath morphozoic.jar morphozoic.applications.PathfinderOptimizer -organismDimensions 10 10 -randomSeed 45
+java -classpath morphozoic.jar morphozoic.applications.PathfinderOptimizer \
+-organismDimensions 10 10 -randomSeed 45
+
+Gastrulation evolution:
+java -classpath morphozoic.jar morphozoic.applications.MorphEvolver  \
+-organismDimensions 15 15 \
+-numCellTypes 1 \
+-populationSize 50 \
+-fitPopulationSize 10 \
+-numEvolveEpochs 10 \
+-numEpochUpdateSteps 1 \
+-numGenerations 50 \
+-fitGenerations 10 \
+-numMatingOffspring 20 \
+-randomSeed 54

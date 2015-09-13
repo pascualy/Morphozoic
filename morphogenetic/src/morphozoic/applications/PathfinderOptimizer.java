@@ -376,7 +376,6 @@ public class PathfinderOptimizer
    Pathfinder testingTarget;
 
    // Constructor.
-   @SuppressWarnings("all")
    public PathfinderOptimizer() throws IllegalArgumentException, IOException
    {
       // Random numbers.
@@ -412,33 +411,19 @@ public class PathfinderOptimizer
          member.fitness    = 0.0f;
 
          // Generate member parameters.
-         if (MAX_NEIGHBORHOOD_DIMENSION == MIN_NEIGHBORHOOD_DIMENSION)
+         member.NEIGHBORHOOD_DIMENSION = randomizer.nextInt(MAX_NEIGHBORHOOD_DIMENSION - MIN_NEIGHBORHOOD_DIMENSION + 1) + MIN_NEIGHBORHOOD_DIMENSION;
+         if ((member.NEIGHBORHOOD_DIMENSION % 2) != 1)
          {
-            member.NEIGHBORHOOD_DIMENSION = MAX_NEIGHBORHOOD_DIMENSION;
-         }
-         else
-         {
-            member.NEIGHBORHOOD_DIMENSION = randomizer.nextInt(MAX_NEIGHBORHOOD_DIMENSION - MIN_NEIGHBORHOOD_DIMENSION) + MIN_NEIGHBORHOOD_DIMENSION;
-            if ((member.NEIGHBORHOOD_DIMENSION % 2) != 1)
+            if (randomizer.nextBoolean())
             {
-               if (randomizer.nextBoolean())
-               {
-                  member.NEIGHBORHOOD_DIMENSION--;
-               }
-               else
-               {
-                  member.NEIGHBORHOOD_DIMENSION++;
-               }
+               member.NEIGHBORHOOD_DIMENSION--;
+            }
+            else
+            {
+               member.NEIGHBORHOOD_DIMENSION++;
             }
          }
-         if (MAX_NUM_NEIGHBORHOODS == MIN_NUM_NEIGHBORHOODS)
-         {
-            member.NUM_NEIGHBORHOODS = MAX_NUM_NEIGHBORHOODS;
-         }
-         else
-         {
-            member.NUM_NEIGHBORHOODS = randomizer.nextInt(MAX_NUM_NEIGHBORHOODS - MIN_NUM_NEIGHBORHOODS) + MIN_NUM_NEIGHBORHOODS;
-         }
+         member.NUM_NEIGHBORHOODS = randomizer.nextInt(MAX_NUM_NEIGHBORHOODS - MIN_NUM_NEIGHBORHOODS + 1) + MIN_NUM_NEIGHBORHOODS;
          member.NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS = new float[member.NUM_NEIGHBORHOODS];
          float f = 0.0f;
          for (int j = 0; j < member.NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS.length; j++)
@@ -457,26 +442,19 @@ public class PathfinderOptimizer
                member.NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS[j] = 1.0f / member.NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS.length;
             }
          }
-         if (MAX_METAMORPH_DIMENSION == MIN_METAMORPH_DIMENSION)
+         member.METAMORPH_DIMENSION = randomizer.nextInt(MAX_METAMORPH_DIMENSION - MIN_METAMORPH_DIMENSION + 1) + MIN_METAMORPH_DIMENSION;
+         if ((member.METAMORPH_DIMENSION % 2) != 1)
          {
-            member.METAMORPH_DIMENSION = MAX_METAMORPH_DIMENSION;
-         }
-         else
-         {
-            member.METAMORPH_DIMENSION = randomizer.nextInt(MAX_METAMORPH_DIMENSION - MIN_METAMORPH_DIMENSION) + MIN_METAMORPH_DIMENSION;
-            if ((member.METAMORPH_DIMENSION % 2) != 1)
+            if (randomizer.nextBoolean())
             {
-               if (randomizer.nextBoolean())
-               {
-                  member.METAMORPH_DIMENSION--;
-               }
-               else
-               {
-                  member.METAMORPH_DIMENSION++;
-               }
+               member.METAMORPH_DIMENSION--;
+            }
+            else
+            {
+               member.METAMORPH_DIMENSION++;
             }
          }
-         member.MAX_CELL_METAMORPHS          = randomizer.nextInt(MAX_MAX_CELL_METAMORPHS - MIN_MAX_CELL_METAMORPHS) + MIN_MAX_CELL_METAMORPHS;
+         member.MAX_CELL_METAMORPHS          = randomizer.nextInt(MAX_MAX_CELL_METAMORPHS - MIN_MAX_CELL_METAMORPHS + 1) + MIN_MAX_CELL_METAMORPHS;
          member.METAMORPH_RANDOM_BIAS        = (randomizer.nextFloat() * (MAX_METAMORPH_RANDOM_BIAS - MIN_METAMORPH_RANDOM_BIAS)) + MIN_METAMORPH_RANDOM_BIAS;
          member.INHIBIT_COMPETING_MORPHOGENS = randomizer.nextBoolean();
       }
@@ -521,7 +499,7 @@ public class PathfinderOptimizer
    // Main.
    public static void main(String[] args)
    {
-      String usage = "Usage: java morphozoic.applications.PathfinderOptimizer" + OPTIONS + "\n\t[organism-specific options]";
+      String usage = "Usage: java morphozoic.applications.PathfinderOptimizer" + OPTIONS;
 
       // Get arguments.
       for (int i = 0; i < args.length; i++)

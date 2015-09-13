@@ -43,7 +43,7 @@ public class GameOfLife extends Organism
             if (i == args.length)
             {
                System.err.println(usage);
-               return;
+               throw new IllegalArgumentException(usage);
             }
             genFilename = args[i];
          }
@@ -53,7 +53,7 @@ public class GameOfLife extends Organism
             if (i == args.length)
             {
                System.err.println(usage);
-               return;
+               throw new IllegalArgumentException(usage);
             }
             execFilename = args[i];
          }
@@ -79,9 +79,9 @@ public class GameOfLife extends Organism
          }
          catch (Exception e)
          {
-            System.err.println("Cannot open save file " + genFilename +
+            System.err.println("Cannot save file " + genFilename +
                                ":" + e.getMessage());
-            throw new IOException("Cannot open save file " + genFilename +
+            throw new IOException("Cannot save file " + genFilename +
                                   ":" + e.getMessage());
          }
       }

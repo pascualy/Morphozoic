@@ -14,7 +14,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Random;
 import java.util.Vector;
+
 import javax.imageio.ImageIO;
+
 import rdtree.RDclient;
 import morphozoic.Cell;
 import morphozoic.Metamorph;
@@ -62,7 +64,7 @@ public class Celegans extends Organism
             if (i == args.length)
             {
                System.err.println(usage);
-               return;
+               throw new IllegalArgumentException(usage);
             }
             morphImageTemplateFile = args[i];
             morphFile = true;
@@ -73,7 +75,7 @@ public class Celegans extends Organism
             if (i == args.length)
             {
                System.err.println(usage);
-               return;
+               throw new IllegalArgumentException(usage);
             }
             genFilename = args[i];
          }
@@ -83,7 +85,7 @@ public class Celegans extends Organism
             if (i == args.length)
             {
                System.err.println(usage);
-               return;
+               throw new IllegalArgumentException(usage);
             }
             execFilename = args[i];
          }
@@ -138,7 +140,7 @@ public class Celegans extends Organism
          {
             System.err.println("Cannot save file " + genFilename +
                                ":" + e.getMessage());
-            throw new IOException("Cannot open save file " + genFilename +
+            throw new IOException("Cannot save file " + genFilename +
                                   ":" + e.getMessage());
          }
       }
