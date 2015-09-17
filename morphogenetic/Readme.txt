@@ -35,3 +35,6 @@ java -classpath morphozoic.jar morphozoic.applications.MorphEvolver  \
 -fitGenerations 10 \
 -numMatingOffspring 20 \
 -randomSeed 54
+
+Turing reaction-diffusion simulation:
+java -classpath morphozoic.jar morphozoic.applications.TuringMorph

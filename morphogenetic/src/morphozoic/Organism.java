@@ -49,6 +49,7 @@ public class Organism
    public                      Instances[][] metamorphInstances;
    public static final boolean saveMetamorphInstances = false;
    public static final boolean saveMetamorphNNs       = false;
+   public static final boolean evaluateMetamorphNNs   = true;
 
    // Cells editable?
    public boolean isEditable = false;
@@ -291,12 +292,14 @@ public class Organism
             }
 
             // Evaluate the network.
-            Evaluation eval = new Evaluation(metamorphInstances[x][y]);
-            eval.evaluateModel(mlp, metamorphInstances[x][y]);
-            System.out.println("x=" + x + ",y=" + y);
-            System.out.println(eval.errorRate());
-            System.out.println(eval.toSummaryString());
-            eval.crossValidateModel(mlp, metamorphInstances[x][y], 10, new Random(1));
+            if (evaluateMetamorphNNs)
+            {
+               Evaluation eval = new Evaluation(metamorphInstances[x][y]);
+               eval.evaluateModel(mlp, metamorphInstances[x][y]);
+               System.out.println("x=" + x + ",y=" + y);
+               System.out.println(eval.errorRate());
+               System.out.println(eval.toSummaryString());
+            }
          }
       }
    }

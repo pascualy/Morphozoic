@@ -646,12 +646,10 @@ public class PathfinderOptimizer
             return;
          }
       }
-
       if (Parameters.NUM_CELL_TYPES != 3)
       {
-         System.err.println("Number of cell types must equal 3");
-         System.err.println(usage);
-         throw new IllegalArgumentException(usage);
+         Parameters.NUM_CELL_TYPES = 3;
+         System.out.println("Setting NUM_CELL_TYPES = " + Parameters.NUM_CELL_TYPES);
       }
 
       try
