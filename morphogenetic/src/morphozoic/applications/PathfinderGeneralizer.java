@@ -12,13 +12,12 @@ import java.util.Random;
 import morphozoic.Cell;
 import morphozoic.Parameters;
 
-// Optimize path finder application.
-public class PathfinderOptimizer
+// Generalize path finder application.
+public class PathfinderGeneralizer
 {
    // Options.
    public static final String OPTIONS =
       "\n\t[-organismDimensions <width> <height> (# cells)]"
-      + "\n\t[-numCellTypes <number of cell types>]"
       + "\n\t[-randomSeed <random seed>]"
       + "\n\t[-populationSize <size>]"
       + "\n\t[-numTrainingMorphs <number of training morphs>]"
@@ -104,16 +103,10 @@ public class PathfinderOptimizer
       boolean INHIBIT_COMPETING_MORPHOGENS;
 
       // Training/testing run.
-      void run(Pathfinder target) throws IOException
+      void run() throws IOException
       {
          // Set parameters.
-         Parameters.NEIGHBORHOOD_DIMENSION = NEIGHBORHOOD_DIMENSION;
-         Parameters.NUM_NEIGHBORHOODS      = NUM_NEIGHBORHOODS;
-         Parameters.NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS = NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS;
-         Parameters.METAMORPH_DIMENSION          = METAMORPH_DIMENSION;
-         Parameters.MAX_CELL_METAMORPHS          = MAX_CELL_METAMORPHS;
-         Parameters.METAMORPH_RANDOM_BIAS        = METAMORPH_RANDOM_BIAS;
-         Parameters.INHIBIT_COMPETING_MORPHOGENS = INHIBIT_COMPETING_MORPHOGENS;
+         setParameters();
 
          // Train.
          Random r = new Random(trainingSeed);
@@ -278,6 +271,19 @@ public class PathfinderOptimizer
       }
 
 
+      // Set parameters.
+      void setParameters()
+      {
+         Parameters.NEIGHBORHOOD_DIMENSION = NEIGHBORHOOD_DIMENSION;
+         Parameters.NUM_NEIGHBORHOODS      = NUM_NEIGHBORHOODS;
+         Parameters.NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS = NESTED_NEIGHBORHOOD_IMPORTANCE_WEIGHTS;
+         Parameters.METAMORPH_DIMENSION          = METAMORPH_DIMENSION;
+         Parameters.MAX_CELL_METAMORPHS          = MAX_CELL_METAMORPHS;
+         Parameters.METAMORPH_RANDOM_BIAS        = METAMORPH_RANDOM_BIAS;
+         Parameters.INHIBIT_COMPETING_MORPHOGENS = INHIBIT_COMPETING_MORPHOGENS;
+      }
+
+
       // Path found from source to target?
       boolean pathFound(Cell[][] cells, int sx, int sy, int tx, int ty, boolean[][] searched)
       {
@@ -372,34 +378,13 @@ public class PathfinderOptimizer
    int    trainingSeed;
    int    testingSeed;
 
-   // Testing target.
-   Pathfinder testingTarget;
-
    // Constructor.
-   public PathfinderOptimizer() throws IllegalArgumentException, IOException
+   public PathfinderGeneralizer() throws IllegalArgumentException, IOException
    {
       // Random numbers.
       randomizer   = new Random(Parameters.RANDOM_SEED);
       trainingSeed = randomizer.nextInt();
       testingSeed  = randomizer.nextInt();
-
-      // Create testing target.
-      testingTarget = new Pathfinder(new String[0], 0);
-      Random r = new Random(testingSeed);
-      for (int i = 0; i < NUM_SOURCE_CELLS; i++)
-      {
-         testingTarget.cells[0][r.nextInt(Parameters.ORGANISM_DIMENSIONS.height)].type = Pathfinder.SOURCE_CELL;
-      }
-      for (int i = 0; i < NUM_TARGET_CELLS; i++)
-      {
-         testingTarget.cells[Parameters.ORGANISM_DIMENSIONS.width - 1][r.nextInt(Parameters.ORGANISM_DIMENSIONS.height)].type = Pathfinder.TARGET_CELL;
-      }
-      for (int i = 0; i < NUM_UPDATE_STEPS; i++)
-      {
-         testingTarget.update();
-      }
-      System.out.println("Testing target:");
-      new PathfinderMember().printCells(testingTarget.cells);
 
       // Create path finder population.
       population = new ArrayList<PathfinderMember>();
@@ -471,7 +456,7 @@ public class PathfinderOptimizer
       for (int i = 0; i < population.size(); i++)
       {
          PathfinderMember member = population.get(i);
-         member.run(testingTarget);
+         member.run();
          System.out.println(i + "\t" + member.fitness + "\n");
          if ((fittestMember == null) || (member.fitness > fittestMember.fitness))
          {
@@ -486,6 +471,7 @@ public class PathfinderOptimizer
       {
          System.out.println(fittestIndex + "\t" + fittestMember.fitness);
          System.out.println("Parameters:");
+         fittestMember.setParameters();
          Parameters.print();
          System.out.println("Pathfinder saved to " + FITTEST_FILE_NAME);
       }
@@ -499,7 +485,7 @@ public class PathfinderOptimizer
    // Main.
    public static void main(String[] args)
    {
-      String usage = "Usage: java morphozoic.applications.PathfinderOptimizer" + OPTIONS;
+      String usage = "Usage: java morphozoic.applications.PathfinderGeneralizer" + OPTIONS;
 
       // Get arguments.
       for (int i = 0; i < args.length; i++)
@@ -533,22 +519,6 @@ public class PathfinderOptimizer
                return;
             }
             Parameters.ORGANISM_DIMENSIONS = new Dimension(w, h);
-         }
-         else if (args[i].equals("-numCellTypes"))
-         {
-            i++;
-            if (i == args.length)
-            {
-               System.err.println(usage);
-               return;
-            }
-            Parameters.NUM_CELL_TYPES = Integer.parseInt(args[i]);
-            if (Parameters.NUM_CELL_TYPES <= 0)
-            {
-               System.err.println("Number of cell types must be positive");
-               System.err.println(usage);
-               return;
-            }
          }
          else if (args[i].equals("-randomSeed"))
          {
@@ -654,8 +624,8 @@ public class PathfinderOptimizer
 
       try
       {
-         PathfinderOptimizer optimizer = new PathfinderOptimizer();
-         optimizer.run();
+         PathfinderGeneralizer generalizer = new PathfinderGeneralizer();
+         generalizer.run();
       }
       catch (Exception e) {
          System.err.println(e.getMessage());

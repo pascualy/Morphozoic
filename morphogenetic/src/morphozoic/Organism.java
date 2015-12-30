@@ -467,7 +467,9 @@ public class Organism
          {
             for (y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
             {
-               if ((predecessorCells[x][y].type != Cell.EMPTY) && morphogeneticCell(x, y))
+               if ((predecessorCells[x][y].morphogen != null) &&
+                   (predecessorCells[x][y].type != Cell.EMPTY) &&
+                   morphogeneticCell(x, y))
                {
                   switch (Parameters.METAMORPH_EXEC_TYPE)
                   {

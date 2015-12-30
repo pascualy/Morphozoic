@@ -19,8 +19,8 @@ java -jar morphozoic.jar -organism morphozoic.applications.Celegans
 Path finder application:
 java -jar morphozoic.jar -organism morphozoic.applications.Pathfinder
 
-Path finder optimization:
-java -classpath morphozoic.jar morphozoic.applications.PathfinderOptimizer \
+Path finder generalization:
+java -classpath morphozoic.jar morphozoic.applications.PathfinderGeneralizer \
 -organismDimensions 10 10 -randomSeed 45
 
 Gastrulation evolution:
@@ -38,3 +38,16 @@ java -classpath morphozoic.jar morphozoic.applications.MorphEvolver  \
 
 Turing reaction-diffusion simulation:
 java -classpath morphozoic.jar morphozoic.applications.TuringMorph
+
+Image noise repair:
+java -jar morphozoic.jar -organism morphozoic.applications.ImageRepair
+
+Image repair optimization:
+java -classpath morphozoic.jar morphozoic.applications.ImageRepairOptimizer
+
+Cell regeneration:
+java -jar morphozoic.jar -organism morphozoic.applications.CellRegeneration
+
+Cell regeneration optimization:
+java -classpath morphozoic.jar morphozoic.applications.CellRegenerationOptimizer
+
