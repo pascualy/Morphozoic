@@ -190,7 +190,7 @@ public class ImageRepairOptimizer
 
       // Create fitness target.
       fitnessTarget = new ImageRepair(new String[0], 0);
-      fitnessTarget.loadImage();
+      fitnessTarget.loadImage(ImageRepair.TARGET_IMAGE_FILE_NAME);
 
       // Create ImageRepair population.
       population = new ArrayList<ImageRepairMember>();
@@ -814,7 +814,7 @@ public class ImageRepairOptimizer
                System.err.println(usage);
                return;
             }
-            ImageRepair.IMAGE_FILE_NAME = args[i];
+            ImageRepair.TARGET_IMAGE_FILE_NAME = args[i];
          }
          else if (args[i].equals("-numHoles"))
          {

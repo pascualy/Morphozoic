@@ -23,9 +23,10 @@ public class ImageRepair extends Organism
 {
    public static final String ORGANISM_NAME = "morphozoic.applications.ImageRepair";
 
-   // Image file name.
-   public static final String DEFAULT_IMAGE_FILE_NAME = "lena.jpg";
-   public static String       IMAGE_FILE_NAME         = DEFAULT_IMAGE_FILE_NAME;
+   // Image file names.
+   public static final String DEFAULT_TARGET_IMAGE_FILE_NAME = "lena.jpg";
+   public static String       TARGET_IMAGE_FILE_NAME         = DEFAULT_TARGET_IMAGE_FILE_NAME;
+   public static String       SOURCE_IMAGE_FILE_NAME         = null;
 
    // Image holes to repair.
    public static final int DEFAULT_NUM_HOLES     = 1;
@@ -35,9 +36,11 @@ public class ImageRepair extends Organism
 
    // Options.
    public static final String OPTIONS =
-      "\n\t[-imageFilename <image file name>]"
-      + "\n\t[-numHoles <number of holes made in image>]"
-      + "\n\t[-maxHoleSize <maximum hold size in cells>]";
+      "\n\t[-targetImageFilename <image file name> (default: " + DEFAULT_TARGET_IMAGE_FILE_NAME + ")]"
+      + "\n\t\t[-sourceImageFilename <image file name>]"
+      + "\n\t|"
+      + "\n\t\t[-numHoles <number of holes made in image>]"
+      + "\n\t\t[-maxHoleSize <maximum hold size in cells>]";
 
    // Constructor.
    public ImageRepair(String[] args, Integer id) throws Exception
@@ -48,9 +51,10 @@ public class ImageRepair extends Organism
       randomizer = new Random(Parameters.RANDOM_SEED);
 
       // Get arguments.
+      boolean gotHoles = false;
       for (int i = 0; i < args.length; i++)
       {
-         if (args[i].equals("-imageFilename"))
+         if (args[i].equals("-targetImageFilename"))
          {
             i++;
             if (i == args.length)
@@ -58,7 +62,17 @@ public class ImageRepair extends Organism
                System.err.println(usage);
                throw new IllegalArgumentException(usage);
             }
-            IMAGE_FILE_NAME = args[i];
+            TARGET_IMAGE_FILE_NAME = args[i];
+         }
+         else if (args[i].equals("-sourceImageFilename"))
+         {
+            i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               throw new IllegalArgumentException(usage);
+            }
+            SOURCE_IMAGE_FILE_NAME = args[i];
          }
          else if (args[i].equals("-numHoles"))
          {
@@ -74,6 +88,7 @@ public class ImageRepair extends Organism
                System.err.println("Invalid number of holes");
                throw new IllegalArgumentException("Invalid number of holes");
             }
+            gotHoles = true;
          }
          else if (args[i].equals("-maxHoleSize"))
          {
@@ -89,6 +104,7 @@ public class ImageRepair extends Organism
                System.err.println("Maximum hole size must be positive");
                throw new IllegalArgumentException("Maximum hole size must be positive");
             }
+            gotHoles = true;
          }
          else
          {
@@ -96,9 +112,36 @@ public class ImageRepair extends Organism
             throw new IllegalArgumentException(usage);
          }
       }
+      if (gotHoles && (SOURCE_IMAGE_FILE_NAME != null))
+      {
+         System.err.println(usage);
+         throw new IllegalArgumentException(usage);
+      }
 
-      // Load image.
-      loadImage();
+      // Load target image.
+      Cell[][] targetCells = new Cell[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
+      loadImage(TARGET_IMAGE_FILE_NAME);
+      for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+      {
+         for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+         {
+            targetCells[x][y] = cells[x][y].clone();
+         }
+      }
+
+      // Load source image?
+      Cell[][] sourceCells = new Cell[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
+      if (SOURCE_IMAGE_FILE_NAME != null)
+      {
+         loadImage(SOURCE_IMAGE_FILE_NAME);
+         for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+         {
+            for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+            {
+               sourceCells[x][y] = cells[x][y].clone();
+            }
+         }
+      }
 
       // Generate metamorphs.
       for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
@@ -108,6 +151,26 @@ public class ImageRepair extends Organism
             if ((cells[x][y].type != Cell.EMPTY) && morphogeneticCell(x, y))
             {
                cells[x][y].generateMorphogen();
+            }
+            else
+            {
+               cells[x][y].morphogen = null;
+            }
+         }
+      }
+      for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+      {
+         for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+         {
+            cells[x][y].type = targetCells[x][y].type;
+         }
+      }
+      for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+      {
+         for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+         {
+            if (cells[x][y].morphogen != null)
+            {
                Metamorph metamorph = new Metamorph(cells[x][y].morphogen, cells[x][y]);
                for (Metamorph m : metamorphs)
                {
@@ -122,9 +185,15 @@ public class ImageRepair extends Organism
                   metamorphs.add(metamorph);
                }
             }
-            else
+         }
+      }
+      if (SOURCE_IMAGE_FILE_NAME != null)
+      {
+         for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+         {
+            for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
             {
-               cells[x][y].morphogen = null;
+               cells[x][y].type = sourceCells[x][y].type;
             }
          }
       }
@@ -146,23 +215,26 @@ public class ImageRepair extends Organism
       }
 
       // Damage image with holes.
-      for (int i = 0; i < NUM_HOLES; i++)
+      if (SOURCE_IMAGE_FILE_NAME == null)
       {
-         int d  = randomizer.nextInt(MAX_HOLE_SIZE) + 1;
-         int o  = d / 2;
-         int cx = randomizer.nextInt(Parameters.ORGANISM_DIMENSIONS.width);
-         int cy = randomizer.nextInt(Parameters.ORGANISM_DIMENSIONS.height);
-         for (int x = 0; x < d; x++)
+         for (int i = 0; i < NUM_HOLES; i++)
          {
-            for (int y = 0; y < d; y++)
+            int d  = randomizer.nextInt(MAX_HOLE_SIZE) + 1;
+            int o  = d / 2;
+            int cx = randomizer.nextInt(Parameters.ORGANISM_DIMENSIONS.width);
+            int cy = randomizer.nextInt(Parameters.ORGANISM_DIMENSIONS.height);
+            for (int x = 0; x < d; x++)
             {
-               int   x2 = cx - o + x;
-               int   y2 = cy - o + y;
-               float dx = Math.abs(cx - x2);
-               float dy = Math.abs(cy - y2);
-               if (Math.sqrt((dx * dx) + (dy * dy)) <= o)
+               for (int y = 0; y < d; y++)
                {
-                  cells[Organism.wrapX(x2)][Organism.wrapX(y2)].type = 0;
+                  int   x2 = cx - o + x;
+                  int   y2 = cy - o + y;
+                  float dx = Math.abs(cx - x2);
+                  float dy = Math.abs(cy - y2);
+                  if (Math.sqrt((dx * dx) + (dy * dy)) <= o)
+                  {
+                     cells[Organism.wrapX(x2)][Organism.wrapX(y2)].type = 0;
+                  }
                }
             }
          }
@@ -171,13 +243,13 @@ public class ImageRepair extends Organism
 
 
    // Load image from image file.
-   public void loadImage() throws IllegalArgumentException, IOException
+   public void loadImage(String filename) throws IllegalArgumentException, IOException
    {
       Image image = null;
 
       // Load image as resource.
       try {
-         image = (Image)ImageIO.read(getClass().getResource(IMAGE_FILE_NAME));
+         image = (Image)ImageIO.read(getClass().getResource(filename));
       }
       catch (Exception e)
       {
@@ -188,11 +260,11 @@ public class ImageRepair extends Organism
       {
          try
          {
-            image = (Image)ImageIO.read(new File(IMAGE_FILE_NAME));
+            image = (Image)ImageIO.read(new File(filename));
          }
          catch (Exception e)
          {
-            throw new IllegalArgumentException("Cannot load image " + IMAGE_FILE_NAME);
+            throw new IllegalArgumentException("Cannot load image " + filename);
          }
       }
 

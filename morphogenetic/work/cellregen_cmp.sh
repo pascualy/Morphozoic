@@ -8,7 +8,7 @@
 # 2 54
 # 3 81
 
- for org_dim in 20 25 30 35 40
+ for org_dim in 17 21 25 29 33 37 41
  do
     num_neighborhoods=1
    for neighborhood_dim in 9
