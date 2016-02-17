@@ -27,6 +27,7 @@ public class ImageRepair extends Organism
    public static final String DEFAULT_TARGET_IMAGE_FILE_NAME = "lena.jpg";
    public static String       TARGET_IMAGE_FILE_NAME         = DEFAULT_TARGET_IMAGE_FILE_NAME;
    public static String       SOURCE_IMAGE_FILE_NAME         = null;
+   public static int          TRAIN_MORPHS = 1;
 
    // Image holes to repair.
    public static final int DEFAULT_NUM_HOLES     = 1;
@@ -34,13 +35,18 @@ public class ImageRepair extends Organism
    public static final int DEFAULT_MAX_HOLE_SIZE = 1;
    public static int       MAX_HOLE_SIZE         = DEFAULT_MAX_HOLE_SIZE;
 
+   // Zero cell type is empty?
+   public boolean ZERO_CELL_IS_EMPTY = false;
+
    // Options.
    public static final String OPTIONS =
       "\n\t[-targetImageFilename <image file name> (default: " + DEFAULT_TARGET_IMAGE_FILE_NAME + ")]"
-      + "\n\t\t[-sourceImageFilename <image file name>]"
+      + "\n\t\t[-sourceImageFilename <image file name>"
+      + "\n\t\t\t[-trainMorphs <steps> (default=1)]]"
       + "\n\t|"
       + "\n\t\t[-numHoles <number of holes made in image>]"
-      + "\n\t\t[-maxHoleSize <maximum hold size in cells>]";
+      + "\n\t\t[-maxHoleSize <maximum hold size in cells>]"
+      + "\n\t[-zeroCellIsEmpty]";
 
    // Constructor.
    public ImageRepair(String[] args, Integer id) throws Exception
@@ -51,7 +57,8 @@ public class ImageRepair extends Organism
       randomizer = new Random(Parameters.RANDOM_SEED);
 
       // Get arguments.
-      boolean gotHoles = false;
+      boolean gotHoles       = false;
+      boolean gotTrainMorphs = false;
       for (int i = 0; i < args.length; i++)
       {
          if (args[i].equals("-targetImageFilename"))
@@ -73,6 +80,22 @@ public class ImageRepair extends Organism
                throw new IllegalArgumentException(usage);
             }
             SOURCE_IMAGE_FILE_NAME = args[i];
+         }
+         else if (args[i].equals("-trainMorphs"))
+         {
+            i++;
+            if (i == args.length)
+            {
+               System.err.println(usage);
+               throw new IllegalArgumentException(usage);
+            }
+            TRAIN_MORPHS = Integer.parseInt(args[i]);
+            if (TRAIN_MORPHS < 0)
+            {
+               System.err.println("Invalid morph steps");
+               throw new IllegalArgumentException("Invalid morph steps");
+            }
+            gotTrainMorphs = true;
          }
          else if (args[i].equals("-numHoles"))
          {
@@ -106,13 +129,22 @@ public class ImageRepair extends Organism
             }
             gotHoles = true;
          }
+         else if (args[i].equals("-zeroCellIsEmpty"))
+         {
+            ZERO_CELL_IS_EMPTY = true;
+         }
          else
          {
             System.err.println(usage);
             throw new IllegalArgumentException(usage);
          }
       }
-      if (gotHoles && (SOURCE_IMAGE_FILE_NAME != null))
+      if (gotHoles && ((SOURCE_IMAGE_FILE_NAME != null) || gotTrainMorphs))
+      {
+         System.err.println(usage);
+         throw new IllegalArgumentException(usage);
+      }
+      if (gotTrainMorphs && (SOURCE_IMAGE_FILE_NAME == null))
       {
          System.err.println(usage);
          throw new IllegalArgumentException(usage);
@@ -142,76 +174,115 @@ public class ImageRepair extends Organism
             }
          }
       }
-
-      // Generate metamorphs.
-      for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
-      {
-         for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
-         {
-            if ((cells[x][y].type != Cell.EMPTY) && morphogeneticCell(x, y))
-            {
-               cells[x][y].generateMorphogen();
-            }
-            else
-            {
-               cells[x][y].morphogen = null;
-            }
-         }
-      }
-      for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
-      {
-         for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
-         {
-            cells[x][y].type = targetCells[x][y].type;
-         }
-      }
-      for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
-      {
-         for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
-         {
-            if (cells[x][y].morphogen != null)
-            {
-               Metamorph metamorph = new Metamorph(cells[x][y].morphogen, cells[x][y]);
-               for (Metamorph m : metamorphs)
-               {
-                  if (m.equals(metamorph))
-                  {
-                     metamorph = null;
-                     break;
-                  }
-               }
-               if (metamorph != null)
-               {
-                  metamorphs.add(metamorph);
-               }
-            }
-         }
-      }
-      if (SOURCE_IMAGE_FILE_NAME != null)
+      else
       {
          for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
          {
             for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
             {
-               cells[x][y].type = sourceCells[x][y].type;
+               sourceCells[x][y] = targetCells[x][y].clone();
             }
          }
       }
-      switch (Parameters.METAMORPH_EXEC_TYPE)
+
+      // Generate metamorphs.
+      Cell[][] updateCells = new Cell[Parameters.ORGANISM_DIMENSIONS.width][Parameters.ORGANISM_DIMENSIONS.height];
+      for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
       {
-      case LINEAR_SEARCH:
-         break;
-
-      case SEARCH_TREE:
-         for (Metamorph m : metamorphs)
+         for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
          {
-            metamorphSearch.insert((RDclient)m);
+            updateCells[x][y] = sourceCells[x][y].clone();
          }
-         break;
+      }
+      for (int i = 0; i < TRAIN_MORPHS; i++)
+      {
+         for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+         {
+            for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+            {
+               if ((cells[x][y].type != Cell.EMPTY) && morphogeneticCell(x, y))
+               {
+                  cells[x][y].generateMorphogen();
+               }
+               else
+               {
+                  cells[x][y].morphogen = null;
+               }
+            }
+         }
+         for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+         {
+            for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+            {
+               cells[x][y].type = targetCells[x][y].type;
+            }
+         }
+         for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+         {
+            for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+            {
+               if (cells[x][y].morphogen != null)
+               {
+                  Metamorph metamorph = new Metamorph(cells[x][y].morphogen, cells[x][y]);
+                  for (Metamorph m : metamorphs)
+                  {
+                     if (m.equals(metamorph))
+                     {
+                        metamorph = null;
+                        break;
+                     }
+                  }
+                  if (metamorph != null)
+                  {
+                     metamorphs.add(metamorph);
+                  }
+               }
+            }
+         }
+         switch (Parameters.METAMORPH_EXEC_TYPE)
+         {
+         case LINEAR_SEARCH:
+            break;
 
-      case NEURAL_NETWORK:
-         createMetamorphNNs();
-         break;
+         case SEARCH_TREE:
+            for (Metamorph m : metamorphs)
+            {
+               metamorphSearch.insert((RDclient)m);
+            }
+            break;
+
+         case NEURAL_NETWORK:
+            createMetamorphNNs();
+            break;
+         }
+         for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+         {
+            for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+            {
+               cells[x][y].type = updateCells[x][y].type;
+            }
+         }
+
+         // Initialize update.
+         initUpdate();
+
+         // Execute metamorphs.
+         execMetamorphs();
+
+         for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+         {
+            for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+            {
+               updateCells[x][y].type = cells[x][y].type;
+            }
+         }
+      }
+      for (int x = 0; x < Parameters.ORGANISM_DIMENSIONS.width; x++)
+      {
+         for (int y = 0; y < Parameters.ORGANISM_DIMENSIONS.height; y++)
+         {
+            cells[x][y].type = sourceCells[x][y].type;
+         }
       }
 
       // Damage image with holes.
@@ -264,6 +335,7 @@ public class ImageRepair extends Organism
          }
          catch (Exception e)
          {
+            System.err.println("Cannot load image " + filename);
             throw new IllegalArgumentException("Cannot load image " + filename);
          }
       }
@@ -286,6 +358,10 @@ public class ImageRepair extends Organism
             if (t >= Parameters.NUM_CELL_TYPES)
             {
                t = Parameters.NUM_CELL_TYPES - 1;
+            }
+            if (ZERO_CELL_IS_EMPTY && (t == 0))
+            {
+               t = Cell.EMPTY;
             }
             cells[x][cy] = new Cell(t, x, cy, Orientation.NORTH, this);
          }
