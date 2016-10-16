@@ -6,6 +6,8 @@ import javax.swing.JFrame;
 
 class ImageFrame extends JFrame
 {
+   private static final long serialVersionUID = 0L;
+
    public void displayImageInFrame(Image img, String title)
    {
       ImagePanel panel = new ImagePanel(img);
